@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10121b">
+<title>SpellKeep</title>
+<link rel="icon" href="img/icona/icona-192.png">
+<script>
+// Migrazione una tantum dal vecchio APK, che teneva le pagine dentro (origine https://localhost):
+// il guscio nuovo consegna il vecchio localStorage nel frammento #migra=..., che non arriva mai al server.
+// Va fatta qui, prima che profilo.js legga il profilo. Una volta importato, i frammenti seguenti si ignorano.
+(function () {
+  var m = /[#&]migra=([^&]+)/.exec(location.hash);
+  if (!m) return;
+  try {
+    if (!localStorage.getItem('arcomage.migrato')) {
+      var d = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
+      Object.keys(d).forEach(function (k) { if (k.indexOf('arcomage.') === 0) localStorage.setItem(k, d[k]); });
+      localStorage.setItem('arcomage.migrato', String(Date.now()));
+    }
+  } catch (e) { /* frammento rovinato: si parte col profilo che c'e' */ }
+  history.replaceState(null, '', location.pathname + location.search);
+})();
+</script>
+<link rel="stylesheet" href="css/arcomage.css?v=34">
+</head>
+<body>
+<div id="app"></div>
+<script src="dati/carte.js?v=34"></script>
+<script src="dati/arte.js?v=34"></script>
+<script src="dati/icone.js?v=34"></script>
+<script src="js/php.js?v=34"></script>
+<script src="js/motore.js?v=34"></script>
+<script src="js/profilo.js?v=34"></script>
+<script src="js/ui-carta.js?v=34"></script>
+<script src="js/ui-partita.js?v=34"></script>
+<script src="js/ui-mazzi.js?v=34"></script>
+<script src="js/app.js?v=34"></script>
+<script>
+// gioco e figure restano in cache: si gioca anche senza rete (solo sul sito pubblicato, non al banco locale)
+if ('serviceWorker' in navigator && location.protocol === 'https:' && location.hostname !== 'localhost')
+  navigator.serviceWorker.register('spellkeep-sw.js').catch(function () {});
+</script>
+</body>
+</html>
