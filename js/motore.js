@@ -120,7 +120,8 @@
     this.Common = PArr.lista(dati.C, 1);
     this.Uncommon = PArr.lista(dati.U, 1);
     this.Rare = PArr.lista(dati.R, 1);
-    var t = (dati.segnalini || []).slice(0, 3);
+    // un solo segnalino per mazzo (scelta di Luca, 3/10/2026: tre si attivavano di rado); gli altri due posti restano 'none'
+    var t = (dati.segnalini || []).slice(0, 1);
     while (t.length < 3) t.push('none');
     this.Tokens = PArr.lista(t, 1);
     this._caso = caso;
@@ -898,7 +899,7 @@
       });
     });
     return SEGNALINI.filter(function (k) { return conta[k] > 0; })
-      .sort(function (a, b) { return conta[b] - conta[a]; }).slice(0, 3);
+      .sort(function (a, b) { return conta[b] - conta[a]; }).slice(0, 1);
   }
   // un mazzo casuale legale: 15 carte per rarita', niente doppioni, niente Forbidden
   function mazzoCasuale(caso, pool) {

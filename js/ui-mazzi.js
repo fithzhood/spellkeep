@@ -100,26 +100,36 @@
     var righe = s.querySelector('.righe'); righe.innerHTML = '';
     var lista = m[this.scheda].map(UI.dati).sort(function (a, b) { return (a.costo.b + a.costo.g + a.costo.r) - (b.costo.b + b.costo.g + b.costo.r) || a.nome.localeCompare(b.nome); });
     if (!lista.length) righe.appendChild(el('div', 'vuoto-msg', 'Tap cards on the left to add them.'));
-    lista.forEach(function (d) {
+    // il mazzo come carte (illustrazioni raggruppate) o come elenco: si sceglie col pulsante in fondo alla colonna
+    var aCarte = !!this.pr.d.imp.mazzoCarte;
+    righe.classList.toggle('a-carte', aCarte);
+    if (aCarte) {
+      lista.forEach(function (d) {
+        var c = UI.carta(d.id, { mini: true });
+        c.addEventListener('click', function () { self.lente(d.id); });
+        righe.appendChild(c);
+      });
+    } else lista.forEach(function (d) {
       var costi = ['b', 'g', 'r'].filter(function (n) { return d.costo[n] > 0; }).map(function (n) { return '<span class="costo ' + n + '">' + d.costo[n] + '</span>'; }).join('') || '<span class="costo z">0</span>';
       var r = el('button', 'riga-carta', '<span class="costi">' + costi + '</span><span class="nome">' + d.nome + '</span>');
       r.addEventListener('click', function () { self.lente(d.id); });
       righe.appendChild(r);
     });
-    // segnalini: tocco = passa alla keyword successiva fra quelle con segnalino
-    var seg = s.querySelector('.segnalini-mazzo'); seg.innerHTML = '<span class="etic">Tokens</span>';
-    var t = (m.segnalini || []).slice(); while (t.length < 3) t.push('none');
-    t.forEach(function (nome, k) {
-      var b = el('button', '', nome === 'none' ? '—' : '<img src="' + UI.kwIcona(nome) + '" alt="">' + nome);
-      b.addEventListener('click', function () {
-        var giro = ['none'].concat(Motore.SEGNALINI), j = giro.indexOf(nome), prossimo;
-        do { j = (j + 1) % giro.length; prossimo = giro[j]; } while (prossimo !== 'none' && t.indexOf(prossimo) >= 0);
-        t[k] = prossimo;
-        m.segnalini = t.filter(function (x) { return x !== 'none'; });
-        self.pr.salva(); self.disegna();
-      });
-      seg.appendChild(b);
+    // segnalino: uno solo per mazzo; tocco = passa alla keyword successiva fra quelle con segnalino.
+    // Scelto a mano, resta anche aggiungendo o togliendo carte.
+    var seg = s.querySelector('.segnalini-mazzo'); seg.innerHTML = '<span class="etic">Token</span>';
+    var nome = (m.segnalini || [])[0] || 'none';
+    var bt = el('button', '', nome === 'none' ? '—' : '<img src="' + UI.kwIcona(nome) + '" alt="">' + nome);
+    bt.addEventListener('click', function () {
+      var giro = ['none'].concat(Motore.SEGNALINI), j = (giro.indexOf(nome) + 1) % giro.length;
+      m.segnalini = giro[j] === 'none' ? [] : [giro[j]];
+      m.segnaliniScelti = true;
+      self.pr.salva(); self.disegna();
     });
+    seg.appendChild(bt);
+    var vis = el('button', 'vista-mazzo', aCarte ? 'List' : 'Cards');
+    vis.addEventListener('click', function () { self.pr.d.imp.mazzoCarte = !aCarte; self.pr.salva(); self.disegna(); });
+    seg.appendChild(vis);
   };
 
   // un tocco apre la carta (con Aggiungi/Togli); il trascinamento fa solo scorrere la griglia.

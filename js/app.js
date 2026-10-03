@@ -103,7 +103,9 @@
       if (!pr.mazzoValido()) { UI.avviso('Your deck is incomplete'); return this.preparazione(); }
       var av = Avversari.trova(conf.sfida), sf = av.sfida || null;
       var caso = new Motore.Caso((Date.now() ^ (Math.random() * 1e9)) >>> 0);
-      var mio = pr.mazzo(), suo = sf ? { C: sf.mazzo.C, U: sf.mazzo.U, R: sf.mazzo.R, segnalini: sf.segnalini }
+      // sfidanti: il loro segnalino originale, o (se non ne hanno) quello della keyword piu' presente nel mazzo
+      var mio = pr.mazzo(), suo = sf ? { C: sf.mazzo.C, U: sf.mazzo.U, R: sf.mazzo.R,
+          segnalini: sf.segnalini && sf.segnalini.length ? sf.segnalini.slice(0, 1) : Motore.segnaliniAuto(sf.mazzo) }
         : av.mazzo ? { C: av.mazzo.C, U: av.mazzo.U, R: av.mazzo.R, segnalini: av.mazzo.segnalini } : Motore.mazzoCasuale(caso);
       var p = new Motore.Partita({
         mazzi: [{ C: mio.C, U: mio.U, R: mio.R, segnalini: mio.segnalini }, suo],

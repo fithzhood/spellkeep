@@ -271,12 +271,12 @@
     // oltre 15 si puo' andare mentre si costruisce (mazzoValido decide se si gioca); un tetto solo contro gli eccessi
     if (m[d.rarita].length >= 40) return 'Too many ' + { C: 'common', U: 'uncommon', R: 'rare' }[d.rarita] + ' cards';
     m[d.rarita].push(id);
-    m.segnalini = Motore.segnaliniAuto(m);
+    if (!m.segnaliniScelti) m.segnalini = Motore.segnaliniAuto(m);    // quello scelto a mano resta
     this.salva(); return null;
   };
   Profilo.prototype.togliDalMazzo = function (i, id) {
     var m = this.mazzo(i), r = Motore.catalogo.perId[id].rarita, k = m[r].indexOf(id);
-    if (k >= 0) { m[r].splice(k, 1); m.segnalini = Motore.segnaliniAuto(m); this.salva(); }
+    if (k >= 0) { m[r].splice(k, 1); if (!m.segnaliniScelti) m.segnalini = Motore.segnaliniAuto(m); this.salva(); }
   };
 
   radice.Profilo = Profilo;
