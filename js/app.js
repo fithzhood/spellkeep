@@ -55,6 +55,7 @@
       this.monta(s);
       s.querySelector('.indietro').addEventListener('click', function () { self.home(); });
       var lista = s.querySelector('.avversari');
+      setTimeout(function () { UI.sfuma(lista); }, 0);
       var voci = [{ nome: null, titolo: 'Standard opponent', descrizione: 'A computer player with a random deck. Plays by the original MArcomage AI.', premio: ECONOMIA.vittoria }]
         .concat(SFIDE.map(function (x) { return { nome: x.nome, titolo: x.titolo, descrizione: x.descrizione, premio: ECONOMIA.sfide[x.nome] || 100, chiusa: d.sfide.indexOf(x.nome) < 0 }; }));
       voci.forEach(function (v) {
@@ -163,6 +164,7 @@
         o.appendChild(b);
         v.appendChild(o);
       });
+      UI.adattaTesto(v);
       // tre booster: si possono comprare tutti, e si aprono subito
       var vb = s.querySelector('.vetrina-booster');
       (n.booster || []).forEach(function (tipo, i) {

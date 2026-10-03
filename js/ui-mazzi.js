@@ -59,6 +59,7 @@
     var fuori = el('button', this.soloFuori ? 'su' : '', 'Spare');
     fuori.addEventListener('click', function () { self.soloFuori = !self.soloFuori; self.disegna(); });
     f.appendChild(fuori);
+    if (!f.sfumata) { UI.sfuma(f); f.sfumata = true; }
 
     // griglia della collezione, ordinata per rarita' e costo
     var g = s.querySelector('.griglia'), dentro = {};

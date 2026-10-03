@@ -63,6 +63,7 @@
       palco.innerHTML = '';
       var fila = el('div', 'ap-carte');
       palco.appendChild(fila);
+      setTimeout(function () { UI.adattaTesto(fila); }, 0);
       esito.forEach(function (r, i) {
         var s = el('div', 'ap-posto'), giro = el('div', 'ap-giro');
         giro.appendChild(el('div', 'ap-retro dorso'));

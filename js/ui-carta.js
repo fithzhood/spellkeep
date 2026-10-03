@@ -80,6 +80,39 @@
     return e;
   }
 
+  // carte ad altezza fissa (negozio, booster): il testo mostra solo le righe che stanno intere e chiude con "…",
+  // invece di fermarsi a meta' riga lasciando vedere la cima della riga dopo. Si misura sulla carta vera (la scala
+  // dei caratteri del telefono cambia l'altezza delle righe), con le misure di layout, che le rotazioni non toccano.
+  function adattaTesto(radice) {
+    function fai() {
+      (radice || document).querySelectorAll('.carta:not(.mini) .eff').forEach(function (eff) {
+        var c = eff.closest('.carta'), cs = getComputedStyle(eff), cc = getComputedStyle(c);
+        eff.style.webkitLineClamp = ''; eff.style.display = ''; eff.style.flex = ''; eff.style.paddingBottom = '';
+        var lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.22;
+        var spazio = c.clientHeight - parseFloat(cc.paddingBottom) - eff.offsetTop - parseFloat(cs.paddingTop);
+        if (eff.scrollHeight <= eff.clientHeight + 1) return;          // ci sta tutto
+        var righe = Math.max(1, Math.floor(spazio / lh));
+        eff.style.display = '-webkit-box'; eff.style.webkitBoxOrient = 'vertical';
+        eff.style.webkitLineClamp = righe; eff.style.paddingBottom = '0'; eff.style.flex = 'none';   // stirato in altezza, il ritaglio non accorcerebbe niente
+      });
+    }
+    fai();
+    // i caratteri possono arrivare dopo: si rimisura
+    setTimeout(fai, 300);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fai);
+  }
+  // una fila che scorre di lato: sfuma il bordo dove c'e' altro da vedere, cosi' l'oggetto tagliato si legge
+  // come "continua" e non come un errore
+  function sfuma(e) {
+    function aggiorna() {
+      e.classList.toggle('coda-dx', e.scrollLeft + e.clientWidth < e.scrollWidth - 2);
+      e.classList.toggle('coda-sx', e.scrollLeft > 2);
+    }
+    e.addEventListener('scroll', aggiorna, { passive: true });
+    window.addEventListener('resize', aggiorna);
+    aggiorna(); setTimeout(aggiorna, 300);
+  }
+
   // lente: carta grande + spiegazioni delle keyword + azioni. opz.azioni(lato) disegna i pulsanti.
   var lenteAperta = null;
   function chiudiLente() {
@@ -111,5 +144,5 @@
   }
 
   radice.UI = { el: el, icona: icona, segno: segno, moneta: moneta, avviso: avviso, scuoti: scuoti, carta: carta, dati: dati, tipo: tipo,
-    kwIcona: kwIcona, kwPx: kwPx, kwNome: kwNome, apriLente: apriLente, chiudiLente: chiudiLente, lenteAperta: function () { return !!lenteAperta; } };
+    kwIcona: kwIcona, kwPx: kwPx, adattaTesto: adattaTesto, sfuma: sfuma, kwNome: kwNome, apriLente: apriLente, chiudiLente: chiudiLente, lenteAperta: function () { return !!lenteAperta; } };
 })(window);

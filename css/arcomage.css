@@ -411,3 +411,18 @@ img { -webkit-user-drag: none; }
 .finale .pacchi { margin: 2px 0 4px; }
 .finale .scelta-t { font-family: var(--display); font-size: .62rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--ink2); }
 .vetrina-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+/* righe che scorrono di lato: sfumatura sul bordo dove continua (UI.sfuma) */
+.coda-dx { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent); }
+.coda-sx { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 34px), transparent); }
+.coda-sx.coda-dx { -webkit-mask-image: linear-gradient(to right, transparent, #000 34px, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(to right, transparent, #000 34px, #000 calc(100% - 34px), transparent); }
+/* editor: i filtri scorrono nella loro colonna invece di finire sotto il pannello del mazzo */
+.collezione .filtri { min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.collezione .filtri::-webkit-scrollbar { display: none; }
+/* negozio: le cinque carte si stringono quanto serve per stare nella colonna */
+.vetrina { container-type: inline-size; justify-content: safe center; }
+.offerta { --ow: 96px; --ow: min(96px, calc((100cqw - 4 * 10px) / 5)); }
+.offerta .carta { --cw: var(--ow); }
+.offerta .btn { min-width: 0; width: var(--ow); }
+/* pausa e fine partita: ogni pulsante largo quanto la sua parola */
+.finale .azioni .btn { flex: 1 1 auto; }
