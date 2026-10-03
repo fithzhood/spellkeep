@@ -177,7 +177,8 @@
     var ora = [];
     for (var i = 1; i <= 8; i++) {
       var id = PHP.num(g.Hand.get(i)); ora.push(id);
-      var nuova = prima.length && prima[i - 1] !== id;
+      // nuova = pescata dopo la tua ultima mossa (il motore lo tiene in NewCards, come l'originale): resta segnata per tutto il turno
+      var nuova = !!(g.NewCards && g.NewCards.has(i));
       var c = UI.carta(id, { risorse: ris, spenta: !this.p.giocabile(1, i), nuova: nuova });
       c.dataset.pos = i;
       if (i === this.sel) c.classList.add('scelta');

@@ -43,6 +43,8 @@
       b.addEventListener('click', function () { self.i = k; self.disegna(); });
       sm.appendChild(b);
     });
+    if (!sm.sfumata) { UI.sfuma(sm); sm.sfumata = true; }
+    var attivo = sm.querySelector('.su'); if (attivo) setTimeout(function () { attivo.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }, 0);
     // filtri
     var f = s.querySelector('.filtri'); f.innerHTML = '';
     [['tutti', 'All'], ['C', 'C'], ['U', 'U'], ['R', 'R']].forEach(function (x) {

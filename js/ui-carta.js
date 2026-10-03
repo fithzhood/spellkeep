@@ -65,17 +65,19 @@
   // opz: { risorse: {b,g,r} per colorare i costi che mancano, spenta, nuova, mini }
   function carta(id, opz) {
     opz = opz || {};
-    var d = dati(id), e = el('div', 'carta ' + tipo(d) + (opz.mini ? ' mini' : '') + (opz.spenta ? ' spenta' : '') + (opz.nuova ? ' nuova' : ''));
+    var d = dati(id), e = el('div', 'carta ' + tipo(d) + ' rar' + d.rarita + (opz.mini ? ' mini' : '') + (opz.spenta ? ' spenta' : '') + (opz.nuova ? ' nuova' : ''));
     var costi = ['b', 'g', 'r'].filter(function (n) { return d.costo[n] > 0; }).map(function (n) {
       var manca = opz.risorse && d.costo[n] > opz.risorse[n];
       return '<span class="costo ' + n + (manca ? ' manca' : '') + '">' + d.costo[n] + '</span>';
     }).join('') || '<span class="costo z">0</span>';
     // illustrazione nuova se c'e' (dati/arte.js), altrimenti quella originale 80x60
     var arte = window.ARTE && window.ARTE.has(d.id) ? 'img/arte/card_' + d.id + '.jpg?h=' + ((window.ARTE_H || {})[d.id] || '') : 'img/carte/card_' + d.id + '.png';
-    e.innerHTML = '<div class="arte"><img src="' + arte + '" alt="" loading="lazy">' +
-      '<div class="costi">' + costi + '</div><div class="rar ' + d.rarita + '"></div>' +
+    // costo e rarita' in una fascia sopra l'illustrazione (non la coprono); la fascia ha il colore della rarita'
+    e.innerHTML = '<div class="testa-c"><div class="costi">' + costi + '</div><div class="rar ' + d.rarita + '"></div></div>' +
+      '<div class="arte"><img src="' + arte + '" alt="" loading="lazy">' +
       '<div class="kw">' + d.keyword.map(function (k) { return '<img src="' + kwIcona(k) + '" alt="">'; }).join('') + '</div></div>' +
-      '<div class="nomec">' + d.nome + '</div><div class="eff">' + testoEffetto(d) + '</div>';
+      '<div class="nomec">' + d.nome + '</div><div class="eff">' + testoEffetto(d) + '</div>' +
+      (opz.nuova ? '<div class="etichetta-nuova">New</div>' : '');
     e.dataset.id = d.id;
     return e;
   }

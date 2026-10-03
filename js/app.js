@@ -79,6 +79,7 @@
         sm.appendChild(b);
       });
       mz.appendChild(sm); o.appendChild(mz);
+      setTimeout(function () { UI.sfuma(sm); var su = sm.querySelector('.su'); if (su) su.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }, 0);
       function interruttore(testo, sotto, chiave) {
         var r = el('button', 'pannello riga', '<span>' + testo + '<small>' + sotto + '</small></span><span class="interruttore' + (d.imp[chiave] ? ' su' : '') + '"></span>');
         r.addEventListener('click', function () { d.imp[chiave] = !d.imp[chiave]; pr.salva(); self.preparazione(); });

@@ -17,7 +17,7 @@
     prezzoSfida: function (nome) { return Math.round(avversario(nome).premio * 1.1); },
     cartePerNegozio: 5,
     probRarita: { C: 65, U: 29, R: 6 },              // come la pescata dal mazzo
-    slotPartenza: 1, slotMassimi: 8,
+    slotPartenza: 1, slotMassimi: 30,
     // booster: tre carte. Rarita' estratte come dal mazzo (probRarita), tranne il booster raro (tre rare).
     prezzoBooster: 40, prezzoBoosterRaro: 150,
     boosterPerNegozio: 3, boosterPremio: 3,           // nel negozio, e fra cui scegliere dopo una vittoria
