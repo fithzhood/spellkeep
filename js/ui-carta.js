@@ -35,6 +35,21 @@
   function kwNome(k) { return k.replace(/\s*\(.*\)$/, ''); }
   function kwFile(k) { return kwNome(k).toLowerCase().replace(/ /g, '_') + '.png'; }
   function kwIcona(k) { return 'img/keyword/' + kwFile(k); }
+  // le icone delle keyword sono pixel art 16x16: si mostrano a un multiplo intero di pixel fisici (sul Galaxy A25,
+  // 2,8125 px fisici per px CSS, ogni pixel dell'icona diventa 3x3 sulla carta e 4x4 nella lente), mai a misure
+  // che fanno pixel diseguali. kwPx(minimo) = la misura piu' piccola di questo tipo che non scende sotto il minimo.
+  function kwPx(minimo) {
+    var dpr = window.devicePixelRatio || 1, k = 1;
+    while (k * 16 / dpr < minimo) k++;
+    return k * 16 / dpr;
+  }
+  function misureKw() {
+    var s = document.documentElement.style;
+    s.setProperty('--kw1', kwPx(12.5) + 'px');      // sulla carta, nelle spiegazioni, nei segnalini
+    s.setProperty('--kw2', kwPx(20) + 'px');        // nella lente
+  }
+  misureKw();
+  window.addEventListener('resize', misureKw);       // lo zoom del browser cambia devicePixelRatio
   // testo della carta: le keyword citate in grassetto
   function testoEffetto(d) {
     var t = d.effetto.replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -91,5 +106,5 @@
   }
 
   radice.UI = { el: el, icona: icona, segno: segno, moneta: moneta, avviso: avviso, scuoti: scuoti, carta: carta, dati: dati, tipo: tipo,
-    kwIcona: kwIcona, kwNome: kwNome, apriLente: apriLente, chiudiLente: chiudiLente, lenteAperta: function () { return !!lenteAperta; } };
+    kwIcona: kwIcona, kwPx: kwPx, kwNome: kwNome, apriLente: apriLente, chiudiLente: chiudiLente, lenteAperta: function () { return !!lenteAperta; } };
 })(window);

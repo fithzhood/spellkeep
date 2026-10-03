@@ -77,7 +77,7 @@ img { -webkit-user-drag: none; }
 .carta .rar { position: absolute; right: 4px; top: 4px; width: 7px; height: 7px; transform: rotate(45deg); z-index: 2; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
 .rar.C { background: #b9bcc2; } .rar.U { background: #6fb8ec; } .rar.R { background: #f2bd4c; }
 .carta .kw { position: absolute; right: 2px; bottom: 2px; display: flex; gap: 1px; z-index: 2; }
-.carta .kw img { width: 13px; height: 13px; image-rendering: pixelated; background: rgba(0,0,0,.6); border-radius: 2px; padding: .5px; }
+.carta .kw img { width: var(--kw1, 16px); height: var(--kw1, 16px); image-rendering: pixelated; background: rgba(0,0,0,.55); border-radius: 2px; }
 .carta .nomec { font-weight: 800; font-size: .66rem; line-height: 1.15; padding: 3px 2px 1px; white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis; text-align: center; flex: none; color: #fff6e6; }
 .carta .eff { font-size: .6rem; line-height: 1.22; padding: 1px 3px 2px; white-space: pre-line; color: var(--ink2); overflow: hidden; flex: 1; min-height: 0; text-align: center; }
@@ -103,13 +103,13 @@ img { -webkit-user-drag: none; }
 .lente .carta .arte { aspect-ratio: 16 / 11; }
 .lente .carta .nomec { font-family: var(--display); font-weight: 700; font-size: .8rem; white-space: normal; padding: 5px 3px 3px; }
 .lente .carta .eff { font-size: .74rem; color: var(--ink); padding: 0 5px 6px; }
-.lente .carta .kw img { width: 18px; height: 18px; }
+.lente .carta .kw img { width: var(--kw2, 32px); height: var(--kw2, 32px); }
 .lente .carta .costo { font-size: .9rem; min-width: 1.45rem; height: 1.45rem; }
 .lente .lato { width: 214px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100dvh - 16px); }
 .kwlista { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; }
 .kwbox { background: rgba(14,15,22,.9); border: 1px solid var(--filo); border-radius: 6px; padding: 4px 7px; font-size: .58rem; line-height: 1.2; color: var(--ink2); }
 .kwbox b { display: flex; align-items: center; gap: 4px; font-family: var(--display); font-size: .64rem; color: var(--ink); margin-bottom: 1px; }
-.kwbox b img { width: 13px; height: 13px; image-rendering: pixelated; }
+.kwbox b img { width: var(--kw1, 16px); height: var(--kw1, 16px); image-rendering: pixelated; }
 .lente .nota { font-family: var(--display); font-size: .6rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--lui); }
 .lente .nota.neutra { color: var(--ink2); }
 .azioni { display: flex; gap: 6px; flex-wrap: wrap; flex: none; }
@@ -144,7 +144,7 @@ img { -webkit-user-drag: none; }
 .seg { position: relative; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
   background: conic-gradient(var(--oro) calc(var(--v) * 1%), rgba(245,236,218,.14) 0); box-shadow: 0 1px 4px rgba(0,0,0,.5); }
 .seg::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: #15141c; }
-.seg img { position: relative; width: 13px; height: 13px; image-rendering: pixelated; }
+.seg img { position: relative; width: var(--kw1, 16px); height: var(--kw1, 16px); image-rendering: pixelated; }
 .seg.pieno { box-shadow: 0 0 0 1px var(--oro), 0 0 10px rgba(226,179,92,.7); }
 .seg small { position: absolute; bottom: -4px; right: -5px; font-size: .5rem; font-weight: 800; background: #15141c; border-radius: 4px; padding: 0 2px; line-height: 1.2; border: 1px solid var(--filo); }
 
@@ -313,7 +313,7 @@ img { -webkit-user-drag: none; }
 .segnalini-mazzo { display: flex; gap: 4px; flex: none; align-items: center; }
 .segnalini-mazzo button { flex: 1; min-height: 44px; border-radius: 7px; border: 1px dashed rgba(245,236,218,.3); font-size: .6rem; font-weight: 800;
   display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
-.segnalini-mazzo img { width: 13px; height: 13px; image-rendering: pixelated; }
+.segnalini-mazzo img { width: var(--kw1, 16px); height: var(--kw1, 16px); image-rendering: pixelated; }
 .vuoto-msg { color: var(--ink3); font-size: .72rem; padding: 10px; text-align: center; }
 
 /* impostazioni */

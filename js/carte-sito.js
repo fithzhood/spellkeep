@@ -102,6 +102,9 @@
     g.style.setProperty('--gw', cw + 'px');
     g.style.setProperty('--cols', n);
     g.style.setProperty('--s', Math.max(.92, 1 + (cw - 110) / 240).toFixed(3));
+    var s = Math.max(.92, 1 + (cw - 110) / 240);
+    g.style.setProperty('--kwg', UI.kwPx(12.5 * s) + 'px');     // icone a multipli interi di pixel fisici
+    document.documentElement.style.setProperty('--kwc', UI.kwPx(16) + 'px');
   }
   if (window.ResizeObserver) new ResizeObserver(misura).observe($('griglia'));
   window.addEventListener('resize', misura);

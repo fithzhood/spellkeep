@@ -45,11 +45,11 @@
 .sc-griglia .carta .eff { flex: 1 0 auto; overflow: visible; font-size: calc(.6rem * var(--s)); }
 .sc-griglia .carta .costo { font-size: calc(.74rem * var(--s)); min-width: calc(1.2rem * var(--s)); height: calc(1.2rem * var(--s)); }
 .sc-griglia .carta .rar { width: calc(7px * var(--s)); height: calc(7px * var(--s)); right: calc(4px * var(--s)); top: calc(4px * var(--s)); }
-.sc-griglia .carta .kw img { width: calc(13px * var(--s)); height: calc(13px * var(--s)); }
+.sc-griglia .carta .kw img { width: var(--kwg, 16px); height: var(--kwg, 16px); }
 .carta .kwnomi { display: flex; flex-wrap: wrap; justify-content: center; gap: 1px 7px; margin-top: 2px; padding: 3px 2px 1px;
   border-top: 1px solid rgba(245,236,218,.12); font-size: calc(.56rem * var(--s)); font-weight: 700; color: var(--ink); line-height: 1.25; }
 .carta .kwnomi span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
-.carta .kwnomi img { width: calc(11px * var(--s)); height: calc(11px * var(--s)); image-rendering: pixelated; }
+.carta .kwnomi img { width: var(--kwg, 16px); height: var(--kwg, 16px); image-rendering: pixelated; }
 @media (hover: hover) {
   .sc-griglia .carta:hover { transform: translateY(-3px); box-shadow: 0 0 0 1px var(--oro), 0 8px 18px rgba(0,0,0,.7); }
 }
@@ -85,7 +85,7 @@
 .tre .b { background: var(--mat); } .tre .g { background: var(--gem); } .tre .r { background: var(--rec); }
 .zero { font-style: normal; width: 17px; height: 17px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--zero); color: #fff; font-size: .66rem; font-family: var(--display); font-weight: 900; }
 .kw-g { padding: 0 11px 0 8px; gap: 5px; }
-.kw-g img { width: 24px; height: 24px; image-rendering: pixelated; }
+.kw-g img { width: var(--kwc, 16px); height: var(--kwc, 16px); image-rendering: pixelated; }
 .segm { display: inline-flex; border: 1px solid rgba(245,236,218,.2); border-radius: 99px; overflow: hidden; }
 .segm .gett { border: 0; border-radius: 0; background: none; }
 .segm .gett.su { background: var(--ink); }
@@ -127,7 +127,7 @@
 .ls-kw { display: flex; flex-direction: column; gap: 6px; }
 .ls-kw .kwbox { font-size: .84rem; line-height: 1.3; padding: 7px 10px; }
 .ls-kw .kwbox b { font-size: .86rem; gap: 6px; margin-bottom: 3px; }
-.ls-kw .kwbox b img { width: 24px; height: 24px; }
+.ls-kw .kwbox b img { width: var(--kw2, 32px); height: var(--kw2, 32px); }
 .ls-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--filo);
   padding: 6px max(12px, var(--lato)) calc(6px + env(safe-area-inset-bottom, 0px)); background: rgba(10,10,14,.7); }
 .ls-nav span { font-size: .82rem; color: var(--ink2); font-variant-numeric: tabular-nums; }
