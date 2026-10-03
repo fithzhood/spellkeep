@@ -637,6 +637,7 @@
             if (PHP.num(io.getToken(kw)) >= 100) {
               io.setToken(kw, 0);
               scattati[io.findToken(kw)] = 1;
+              ris.segnalini = (ris.segnalini || []).concat([kw]);   // per l'interfaccia: quale segnalino e' scattato
               t.executeCode(k.codice);
             }
           } else t.executeCode(k.codice);
@@ -671,7 +672,7 @@
       ris.anteprima = {
         io: { attr: attr(io), cambi: camb(manoIo, io.Hand), variazioni: Object.assign({}, io.Changes), segnalini: io.TokenValues.values() },
         lui: { attr: attr(lui), cambi: camb(manoLui, lui.Hand), variazioni: Object.assign({}, lui.Changes), segnalini: lui.TokenValues.values() },
-        turnoExtra: t.nextPlayer === n
+        scatta: ris.segnalini || [], turnoExtra: t.nextPlayer === n
       };
       return ris;
     }

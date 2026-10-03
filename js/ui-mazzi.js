@@ -5,11 +5,12 @@
   'use strict';
   var el = UI.el;
   var RARITA = { C: 'Common', U: 'Uncommon', R: 'Rare' };
-  var TIPI = [['tutti', 'All', ''], ['b', '', 'var(--mat)'], ['g', '', 'var(--gem)'], ['r', '', 'var(--rec)'], ['m', '', 'var(--mix)'], ['z', '', 'var(--zero)']];
 
   function Editor(app, indice) {
     this.app = app; this.pr = app.profilo; this.i = indice || 0;
-    this.filtroR = 'tutti'; this.filtroT = 'tutti'; this.scheda = 'C'; this.soloFuori = false;
+    this.scheda = 'C';
+    // i filtri restano finche' l'app e' aperta (si ritrovano riaprendo l'editor)
+    this.F = app.filtriEditor || (app.filtriEditor = { q: '', rar: [], tipi: [], kw: [], fuori: false, ordina: 'rar' });
     this.costruisci();
   }
 
@@ -28,6 +29,7 @@
       if (nome && nome.trim()) { m.nome = nome.trim().slice(0, 24); self.pr.salva(); self.disegna(); }
     });
     this.impostaGriglia();
+    this.impostaFiltri();
     this.disegna();
   };
 
@@ -46,38 +48,12 @@
     });
     if (!sm.sfumata) { UI.sfuma(sm); sm.sfumata = true; }
     var attivo = sm.querySelector('.su'); if (attivo) setTimeout(function () { attivo.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }, 0);
-    // filtri
-    var f = s.querySelector('.filtri'); f.innerHTML = '';
-    [['tutti', 'All'], ['C', 'C'], ['U', 'U'], ['R', 'R']].forEach(function (x) {
-      var b = el('button', self.filtroR === x[0] ? 'su' : '', x[0] === 'tutti' ? x[1] : '<span class="rombo ' + x[0] + '"></span>' + x[1]);
-      b.addEventListener('click', function () { self.filtroR = x[0]; self.disegna(); });
-      f.appendChild(b);
-    });
-    TIPI.forEach(function (x) {
-      var b = el('button', self.filtroT === x[0] ? 'su' : '', x[2] ? '<span class="pallino" style="background:' + x[2] + '"></span>' : x[1]);
-      b.setAttribute('aria-label', x[0]);
-      b.addEventListener('click', function () { self.filtroT = x[0]; self.disegna(); });
-      f.appendChild(b);
-    });
-    var fuori = el('button', this.soloFuori ? 'su' : '', 'Spare');
-    fuori.addEventListener('click', function () { self.soloFuori = !self.soloFuori; self.disegna(); });
-    f.appendChild(fuori);
-    if (!f.sfumata) { UI.sfuma(f); f.sfumata = true; }
+    this.statoFiltri();
 
     // griglia della collezione, ordinata per rarita' e costo
     var g = s.querySelector('.griglia'), dentro = {};
     ['C', 'U', 'R'].forEach(function (r) { m[r].forEach(function (id) { dentro[id] = 1; }); });
-    var carte = this.pr.d.collezione.map(UI.dati).filter(function (d) {
-      if (self.filtroR !== 'tutti' && d.rarita !== self.filtroR) return false;
-      if (self.filtroT !== 'tutti' && UI.tipo(d) !== self.filtroT) return false;
-      if (self.soloFuori && dentro[d.id]) return false;
-      return true;
-    }).sort(function (a, b) {
-      var ra = 'CUR'.indexOf(a.rarita), rb = 'CUR'.indexOf(b.rarita);
-      if (ra !== rb) return ra - rb;
-      var ca = a.costo.b + a.costo.g + a.costo.r, cb = b.costo.b + b.costo.g + b.costo.r;
-      return ca - cb || a.nome.localeCompare(b.nome);
-    });
+    var carte = this.carteFiltrate(dentro);
     var top = g.scrollTop;
     g.classList.toggle('testuale', !!this.pr.d.imp.testo);
     g.innerHTML = '';
@@ -125,6 +101,7 @@
       m.segnalini = giro[j] === 'none' ? [] : [giro[j]];
       m.segnaliniScelti = true;
       self.pr.salva(); self.disegna();
+      if (giro[j] !== 'none') { var e = Segnalini.effetto(giro[j]); UI.avviso(giro[j] + ' token at 100 · ' + e.nome + ': ' + e.testo); }
     });
     seg.appendChild(bt);
     var vis = el('button', 'vista-mazzo', aCarte ? 'List' : 'Cards');
@@ -159,6 +136,131 @@
     resta.addEventListener('click', function () { f.remove(); });
     via.addEventListener('click', function () { f.remove(); self.app.home(); });
     az.appendChild(via); az.appendChild(resta); r.appendChild(az); f.appendChild(r); document.body.appendChild(f);
+  };
+
+  // ------------------------------------------------------------------ filtri
+  // Una riga sola, senza scorrimento: ricerca, pulsante Filters (pannello con rarita', tipo di costo, keyword,
+  // ordine), Spare (solo le carte non ancora nel mazzo) e la X che azzera tutto.
+  var TIPI_F = [['b', 'Bricks'], ['g', 'Gems'], ['r', 'Recruits'], ['m', 'Mixed'], ['z', 'Free']];
+  var ICO_T = { b: 'brick-pile', g: 'crystal-growth', r: 'crested-helmet' };
+  var ORDINI = [['rar', 'Rarity'], ['costo', 'Cost'], ['nome', 'Name']];
+  var NESSUNA = '(none)';
+  function totale(d) { return d.costo.b + d.costo.g + d.costo.r; }
+  function alterna(a, x) { var i = a.indexOf(x); if (i >= 0) a.splice(i, 1); else a.push(x); }
+  function icoTipo(k) {
+    return ICO_T[k] ? UI.icona(ICO_T[k]) : k === 'm' ? '<i class="tre"><u class="b"></u><u class="g"></u><u class="r"></u></i>' : '<i class="zero">0</i>';
+  }
+
+  Editor.prototype.quantiFiltri = function () {
+    var F = this.F;
+    return F.rar.length + F.tipi.length + F.kw.length + (F.q.trim() ? 1 : 0) + (F.fuori ? 1 : 0);
+  };
+
+  Editor.prototype.carteFiltrate = function (dentro) {
+    var F = this.F, q = F.q.trim().toLowerCase();
+    return this.pr.d.collezione.map(UI.dati).filter(function (d) {
+      if (F.rar.length && F.rar.indexOf(d.rarita) < 0) return false;
+      if (F.tipi.length && F.tipi.indexOf(UI.tipo(d)) < 0) return false;
+      if (F.kw.length && !F.kw.some(function (k) { return k === NESSUNA ? !d.keyword.length : d.keyword.map(UI.kwNome).indexOf(k) >= 0; })) return false;
+      if (F.fuori && dentro[d.id]) return false;
+      if (q && d.nome.toLowerCase().indexOf(q) < 0 && d.effetto.toLowerCase().indexOf(q) < 0 && d.kw.toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    }).sort(function (a, b) {
+      var ra = 'CUR'.indexOf(a.rarita) - 'CUR'.indexOf(b.rarita), ca = totale(a) - totale(b), na = a.nome.localeCompare(b.nome);
+      if (F.ordina === 'costo') return ca || ra || na;
+      if (F.ordina === 'nome') return na;
+      return ra || ca || na;
+    });
+  };
+
+  Editor.prototype.impostaFiltri = function () {
+    var self = this, f = this.s.querySelector('.filtri');
+    f.innerHTML = '<label class="cerca">' + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>' + '<input type="search" placeholder="Search" enterkeyhint="search" autocomplete="off"></label>' +
+      '<button class="apri-filtri">Filters<b class="n"></b></button><button class="spare">Spare</button>' +
+      '<button class="azzera" aria-label="Clear filters">×</button>';
+    var inp = f.querySelector('input');
+    inp.value = this.F.q;
+    inp.addEventListener('input', function () { self.F.q = inp.value; self.disegna(); });
+    inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') inp.blur(); });
+    f.querySelector('.apri-filtri').addEventListener('click', function () { self.pannelloFiltri(); });
+    f.querySelector('.spare').addEventListener('click', function () { self.F.fuori = !self.F.fuori; self.disegna(); });
+    f.querySelector('.azzera').addEventListener('click', function () {
+      var F = self.F; F.q = ''; F.rar.length = 0; F.tipi.length = 0; F.kw.length = 0; F.fuori = false;
+      inp.value = ''; self.disegna();
+    });
+  };
+
+  // solo lo stato dei pulsanti: la barra non si ridisegna, cosi' la casella di ricerca non perde il cursore
+  Editor.prototype.statoFiltri = function () {
+    var f = this.s.querySelector('.filtri'), F = this.F, n = F.rar.length + F.tipi.length + F.kw.length;
+    f.querySelector('.apri-filtri').classList.toggle('su', n > 0);
+    f.querySelector('.apri-filtri .n').textContent = n ? n : '';
+    f.querySelector('.spare').classList.toggle('su', F.fuori);
+    f.querySelector('.azzera').hidden = !this.quantiFiltri();
+  };
+
+  Editor.prototype.pannelloFiltri = function () {
+    var self = this, F = this.F, v = el('div', 'velo-filtri'), p = el('div', 'pannello pannello-filtri');
+    // keyword presenti nella collezione, con quante carte ne hanno
+    var conta = {}, senza = 0;
+    this.pr.d.collezione.forEach(function (id) {
+      var d = UI.dati(id);
+      if (!d.keyword.length) senza++;
+      d.keyword.map(UI.kwNome).filter(function (k, i, l) { return l.indexOf(k) === i; }).forEach(function (k) { if (k !== 'Forbidden') conta[k] = (conta[k] || 0) + 1; });
+    });
+    var kws = Object.keys(conta).sort();
+    function gett(html, cls, attivo, fai) {
+      var b = el('button', 'gett ' + cls + (attivo() ? ' su' : ''), html);
+      b.addEventListener('click', function () { fai(); b.classList.toggle('su', attivo()); aggiorna(); });
+      return b;
+    }
+    function sezione(titolo, cls) {
+      var s = el('div', 'fsez ' + (cls || ''), '<div class="fsez-t">' + titolo + '</div>'), g = el('div', 'gruppo');
+      s.appendChild(g); return [s, g];
+    }
+    var sx = el('div', 'f-sx'), dx = el('div', 'f-dx');
+    var r = sezione('Rarity');
+    ['C', 'U', 'R'].forEach(function (k) {
+      r[1].appendChild(gett('<i class="rar ' + k + '"></i>' + RARITA[k], 'rar-g', function () { return F.rar.indexOf(k) >= 0; }, function () { alterna(F.rar, k); }));
+    });
+    sx.appendChild(r[0]);
+    var t = sezione('Cost type');
+    TIPI_F.forEach(function (x) {
+      t[1].appendChild(gett(icoTipo(x[0]) + x[1], 'tipo ' + x[0], function () { return F.tipi.indexOf(x[0]) >= 0; }, function () { alterna(F.tipi, x[0]); }));
+    });
+    sx.appendChild(t[0]);
+    var o = sezione('Sort by');
+    var ordini = ORDINI.map(function (x) {
+      return gett(x[1], 'ord', function () { return F.ordina === x[0]; }, function () {
+        F.ordina = x[0]; ordini.forEach(function (b, j) { b.classList.toggle('su', ORDINI[j][0] === F.ordina); });
+      });
+    });
+    ordini.forEach(function (b) { o[1].appendChild(b); });
+    sx.appendChild(o[0]);
+    var k = sezione('Keywords <small>any of these</small>', 'kws');
+    kws.concat([NESSUNA]).forEach(function (n) {
+      var html = n === NESSUNA ? 'No keyword <small>' + senza + '</small>' : '<img src="' + UI.kwIcona(n) + '" alt="">' + n + ' <small>' + conta[n] + '</small>';
+      k[1].appendChild(gett(html, 'kw-g', function () { return F.kw.indexOf(n) >= 0; }, function () { alterna(F.kw, n); }));
+    });
+    dx.appendChild(k[0]);
+    var piede = el('div', 'f-piede'), az = el('button', 'btn', 'Reset'), ok = el('button', 'btn oro', '');
+    az.addEventListener('click', function () {
+      F.rar.length = 0; F.tipi.length = 0; F.kw.length = 0;
+      p.querySelectorAll('.rar-g.su, .tipo.su, .kw-g.su').forEach(function (b) { b.classList.remove('su'); });
+      aggiorna();
+    });
+    function chiudi() { v.remove(); }
+    ok.addEventListener('click', chiudi);
+    v.addEventListener('click', function (ev) { if (ev.target === v) chiudi(); });
+    piede.appendChild(az); piede.appendChild(ok);
+    p.appendChild(sx); p.appendChild(dx); p.appendChild(piede);
+    v.appendChild(p); document.body.appendChild(v);
+    function aggiorna() {
+      self.disegna();
+      var n = self.s.querySelectorAll('.griglia .carta').length;
+      ok.textContent = n ? 'Show ' + n + (n === 1 ? ' card' : ' cards') : 'No cards match';
+    }
+    aggiorna();
   };
 
   Editor.prototype.alterna = function (id, c) {

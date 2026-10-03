@@ -52,7 +52,7 @@ img { -webkit-user-drag: none; }
 .pannello { background: var(--vetro); border: 1px solid var(--filo); border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
 .avviso { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 90; padding: 8px 14px; border-radius: 8px;
   background: rgba(14,15,22,.92); border: 1px solid var(--filo); font-size: .8rem; font-weight: 700; pointer-events: none;
-  animation: avviso 2.2s forwards; white-space: nowrap; }
+  animation: avviso 2.2s forwards; white-space: normal; width: max-content; max-width: min(520px, calc(100vw - 32px)); text-align: center; }
 @keyframes avviso { 0% { opacity: 0; transform: translate(-50%, 8px); } 10%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
 .scuoti { animation: scuoti .35s; }
 @keyframes scuoti { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
@@ -533,3 +533,123 @@ img { -webkit-user-drag: none; }
 .righe.a-carte { flex-direction: row; flex-wrap: wrap; align-content: flex-start; gap: 5px; padding: 2px; }
 .righe.a-carte .carta.mini { --cw: 58px; cursor: pointer; }
 .segnalini-mazzo .vista-mazzo { margin-left: auto; font-family: var(--display); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; font-size: .6rem; }
+
+/* editor: barra dei filtri su una riga sola, senza scorrimento; il resto sta nel pannello Filters */
+.collezione .filtri { overflow: visible; min-width: 0; gap: 5px; }
+.filtri .cerca { flex: 1 1 auto; min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 10px;
+  border-radius: 99px; border: 1px solid rgba(245,236,218,.22); background: rgba(14,15,22,.7); color: var(--ink2); }
+.filtri .cerca svg { width: 16px; height: 16px; flex: none; }
+.filtri .cerca input { flex: 1; min-width: 0; height: 40px; background: none; border: 0; outline: 0; color: var(--ink);
+  font: 700 .74rem var(--testo); user-select: text; -webkit-user-select: text; }
+.filtri .cerca input::placeholder { color: var(--ink3); }
+.filtri .cerca input::-webkit-search-cancel-button { display: none; }
+.filtri .cerca:focus-within { border-color: var(--oro); }
+.filtri button { flex: none; font-size: .7rem; padding: 0 12px; }
+.filtri .apri-filtri .n:not(:empty) { min-width: 1.15rem; height: 1.15rem; border-radius: 99px; display: inline-grid; place-items: center;
+  background: var(--oro); color: #221707; font-size: .62rem; padding: 0 3px; }
+.filtri .apri-filtri.su .n { background: #221707; color: var(--oro); }
+.filtri .azzera { padding: 0; font-size: 1.1rem; }
+.filtri .azzera[hidden] { display: none; }
+
+.velo-filtri { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(8,9,14,.55); animation: dissolve .2s;
+  padding: 8px calc(8px + var(--lato)); }
+.pannello-filtri { width: min(860px, 100%); max-height: calc(100svh - 16px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  grid-template-rows: minmax(0, 1fr) auto; column-gap: 14px; padding: 8px 14px 10px; background: rgba(16,17,25,.97); }
+.pannello-filtri .f-sx, .pannello-filtri .f-dx { min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+.pannello-filtri .fsez { padding: 4px 0 8px; }
+.pannello-filtri .fsez-t { font-family: var(--display); font-size: .6rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink2); margin-bottom: 5px; }
+.pannello-filtri .fsez-t small { font-family: var(--testo); letter-spacing: 0; text-transform: none; color: var(--ink3); font-size: .62rem; margin-left: 4px; }
+.pannello-filtri .gruppo { display: flex; flex-wrap: wrap; gap: 5px; }
+.pannello-filtri .gett { min-height: 44px; padding: 0 11px; display: inline-flex; align-items: center; gap: 6px; border-radius: 99px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(245,236,218,.2); color: var(--ink2); font: 700 .7rem var(--testo); white-space: nowrap; }
+.pannello-filtri .gett small { color: var(--ink3); font-size: .58rem; }
+.pannello-filtri .gett.su { background: var(--ink); border-color: var(--ink); color: #1a1408; }
+.pannello-filtri .gett.su small { color: #5a4a30; }
+.pannello-filtri .gett svg { width: 16px; height: 16px; }
+.pannello-filtri .tipo.b svg { color: var(--mat-chiaro); } .pannello-filtri .tipo.g svg { color: var(--gem-chiaro); } .pannello-filtri .tipo.r svg { color: var(--rec-chiaro); }
+.pannello-filtri .tipo.b.su { background: var(--mat); border-color: var(--mat); } .pannello-filtri .tipo.g.su { background: var(--gem); border-color: var(--gem); }
+.pannello-filtri .tipo.r.su { background: var(--rec); border-color: var(--rec); } .pannello-filtri .tipo.m.su { background: var(--mix); border-color: var(--mix); }
+.pannello-filtri .tipo.z.su { background: var(--zero); border-color: var(--zero); }
+.pannello-filtri .tipo.su, .pannello-filtri .tipo.su svg { color: #fff; }
+.pannello-filtri .tre { display: inline-flex; gap: 2px; } .pannello-filtri .tre u { width: 5px; height: 13px; border-radius: 2px; }
+.pannello-filtri .tre .b { background: var(--mat); } .pannello-filtri .tre .g { background: var(--gem); } .pannello-filtri .tre .r { background: var(--rec); }
+.pannello-filtri .zero { font-style: normal; width: 16px; height: 16px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--zero);
+  color: #fff; font: 900 .6rem var(--display); }
+.pannello-filtri .kw-g { padding: 0 10px 0 7px; gap: 5px; }
+.pannello-filtri .kw-g img { width: var(--kw1, 16px); height: var(--kw1, 16px); image-rendering: pixelated; }
+.pannello-filtri .f-piede { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--filo); }
+.pannello-filtri .f-piede .oro { min-width: 150px; }
+
+/* segnalini: l'anello si tocca (spiegazione), pulsa se la carta scelta lo porta a 100, esplode quando scatta */
+button.seg { padding: 0; border: 0; color: inherit; font: inherit; cursor: pointer; }
+button.seg::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; }
+.seg.scatta { animation: carica-seg .7s ease-in-out infinite alternate; }
+@keyframes carica-seg { from { box-shadow: 0 0 0 1px var(--oro), 0 0 6px rgba(226,179,92,.6); transform: scale(1); }
+  to { box-shadow: 0 0 0 2px #fff3c4, 0 0 18px rgba(255,214,120,1); transform: scale(1.18); } }
+.seg.esplode { animation: esplode-seg .9s ease-out; }
+@keyframes esplode-seg { 0% { transform: scale(1.5); box-shadow: 0 0 0 3px #fff3c4, 0 0 30px 10px rgba(255,214,120,1); }
+  100% { transform: scale(1); box-shadow: 0 1px 4px rgba(0,0,0,.5); } }
+
+.scatto-seg { position: fixed; inset: 0; z-index: 75; display: grid; place-items: center; background: radial-gradient(circle at 50% 50%, rgba(255,214,120,.22), rgba(8,9,14,.55) 60%);
+  animation: dissolve .2s; cursor: pointer; }
+.scatto-seg.suo { background: radial-gradient(circle at 50% 50%, rgba(212,87,75,.25), rgba(8,9,14,.55) 60%); }
+.scatto-seg.via { animation: svanisce .26s forwards; }
+@keyframes svanisce { to { opacity: 0; } }
+.scatto-seg .riq { position: relative; display: flex; align-items: center; gap: 14px; max-width: min(560px, calc(100vw - 32px)); padding: 12px 18px 12px 12px;
+  border: 1px solid var(--oro); box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 0 40px rgba(255,214,120,.45), 0 16px 40px rgba(0,0,0,.7); background: rgba(18,17,26,.96);
+  animation: entra-seg .45s cubic-bezier(.2,1.6,.4,1); }
+.scatto-seg.suo .riq { border-color: var(--lui); box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 0 40px rgba(212,87,75,.45), 0 16px 40px rgba(0,0,0,.7); }
+@keyframes entra-seg { from { transform: scale(.4); opacity: 0; } }
+.scatto-seg .ico { flex: none; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: #15141c;
+  box-shadow: 0 0 0 3px var(--oro), 0 0 22px rgba(255,214,120,.8); animation: gira-seg 1.2s ease-out; }
+.scatto-seg.suo .ico { box-shadow: 0 0 0 3px var(--lui), 0 0 22px rgba(212,87,75,.8); }
+@keyframes gira-seg { from { transform: rotate(-200deg) scale(.3); } }
+.scatto-seg .ico img { width: var(--kwg, 48px); height: var(--kwg, 48px); image-rendering: pixelated; }
+.scatto-seg .chi { font-family: var(--display); font-size: .58rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); }
+.scatto-seg .chi b { color: var(--oro); }
+.scatto-seg.suo .chi b { color: var(--lui); }
+.scatto-seg h3 { font-family: var(--display); font-size: 1.25rem; font-weight: 900; letter-spacing: .05em; color: var(--oro); margin: 1px 0 3px; }
+.scatto-seg.suo h3 { color: #ff9d8f; }
+.scatto-seg p { font-size: .8rem; color: var(--ink); line-height: 1.3; }
+.scatto-seg .onde { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.scatto-seg .onde i { grid-area: 1 / 1; width: 120px; height: 120px; border-radius: 50%; border: 3px solid rgba(255,214,120,.8); opacity: 0;
+  animation: onda-seg 1.3s ease-out forwards; }
+.scatto-seg.suo .onde i { border-color: rgba(212,87,75,.8); }
+.scatto-seg .onde i:nth-child(2) { animation-delay: .2s; } .scatto-seg .onde i:nth-child(3) { animation-delay: .4s; }
+@keyframes onda-seg { 0% { transform: scale(.3); opacity: 1; } 100% { transform: scale(5); opacity: 0; } }
+
+.avvisa-seg { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--oro);
+  background: linear-gradient(180deg, #3a2c12, #241b0b); box-shadow: 0 0 12px rgba(226,179,92,.35); animation: carica-avviso 1s ease-in-out infinite alternate; }
+@keyframes carica-avviso { to { box-shadow: 0 0 18px rgba(255,214,120,.7); } }
+.avvisa-seg img { flex: none; width: var(--kw2, 32px); height: var(--kw2, 32px); image-rendering: pixelated; }
+.avvisa-seg b { display: block; font-size: .7rem; color: var(--oro); }
+.avvisa-seg span { display: block; font-size: .64rem; color: var(--ink); line-height: 1.25; }
+
+.velo-seg { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(8,9,14,.5); animation: dissolve .2s; }
+.spiega-seg { width: min(380px, calc(100vw - 32px)); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: rgba(18,17,26,.97); }
+.spiega-seg .testa-s { display: flex; align-items: center; gap: 10px; }
+.spiega-seg .testa-s img { width: var(--kw2, 32px); height: var(--kw2, 32px); image-rendering: pixelated; }
+.spiega-seg .testa-s b { display: block; font-family: var(--display); font-size: .9rem; }
+.spiega-seg .testa-s small { color: var(--oro); font-weight: 800; font-size: .7rem; }
+.spiega-seg .barra { height: 8px; border-radius: 99px; background: rgba(245,236,218,.12); overflow: hidden; }
+.spiega-seg .barra i { display: block; height: 100%; background: linear-gradient(90deg, #c9953f, #f6cf6a); }
+.spiega-seg p { font-size: .76rem; line-height: 1.3; color: var(--ink); }
+.spiega-seg p b { color: var(--oro); }
+.spiega-seg .piccolo { font-size: .66rem; color: var(--ink2); }
+/* carte strette con tre costi (es. Ocean king 30/30/30): cifre strette e gemme accostate, cosi' il simbolo di
+   rarita' resta sulla stessa riga invece di scendere sotto */
+.mano .carta .costi.c3, .carta.mini .costi.c3, .offerta .carta .costi.c3, .ultima .carta .costi.c3 { gap: 0; }
+.mano .carta .costi.c3 .costo, .carta.mini .costi.c3 .costo, .offerta .carta .costi.c3 .costo, .ultima .carta .costi.c3 .costo {
+  font-family: var(--testo); font-weight: 900; letter-spacing: -.03em; padding: 0 2px; min-width: 0; }
+.mano .carta .costi.c3 .costo + .costo, .carta.mini .costi.c3 .costo + .costo, .offerta .carta .costi.c3 .costo + .costo,
+  .ultima .carta .costi.c3 .costo + .costo { margin-left: -2px; }
+.mano .carta .testa-c, .carta.mini .testa-c, .offerta .carta .testa-c, .ultima .carta .testa-c { flex-wrap: wrap; }
+.mano .carta .testa-c .rar, .carta.mini .testa-c .rar, .offerta .carta .testa-c .rar, .ultima .carta .testa-c .rar { margin-right: 2px; }
+/* costo che non puoi pagare: la gemma tiene il colore della sua risorsa (si deve capire QUALE manca) e prende un
+   anello rosso; sulla carta non giocabile si spengono illustrazione e testo, non la fascia del costo */
+.costo.manca { color: #fff; border-color: #2a0b08; box-shadow: 0 0 0 2px #ff4f3f, 0 0 7px rgba(255,79,63,.85); }
+.costo.b.manca { background: var(--mat); } .costo.g.manca { background: var(--gem); } .costo.r.manca { background: var(--rec); }
+.mano .carta.spenta { filter: brightness(.88); }
+.mano .carta.spenta > :not(.testa-c), .mano .carta.spenta .nome-t, .mano .carta.spenta .rar { filter: saturate(.3) brightness(.62); }
+.mano .carta.spenta .costo:not(.manca) { filter: saturate(.5) brightness(.8); }

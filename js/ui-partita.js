@@ -74,6 +74,11 @@
       var imp = self.app.profilo.d.imp; imp.testo = !imp.testo; self.app.profilo.salva(); self.disegnaMano();
     });
     this.impostaMano();
+    ['io', 'lui'].forEach(function (chi) {
+      self.q('.ris-' + chi).addEventListener('click', function (ev) {
+        var b = ev.target.closest('.seg'); if (b) Segnalini.spiega(b.dataset.kw, +b.dataset.v);
+      });
+    });
   };
 
   // ------------------------------------------------------------------ disegno
@@ -85,6 +90,7 @@
     if (r.errore) return null;
     var a = { io: {}, lui: {} }, g1 = this.p.g[1], g2 = this.p.g[2];
     Motore.ATTR.forEach(function (x) { a.io[x] = r.anteprima.io.attr[x] - g1[x]; a.lui[x] = r.anteprima.lui.attr[x] - g2[x]; });
+    a.io.scatta = r.anteprima.scatta;
     return a;
   };
 
@@ -98,7 +104,7 @@
         return '<div class="ris ' + k + '">' + UI.icona(ICO[k]) + '<span class="n">' + g[RIS[k]] + '</span>' +
           '<span class="var">' + (v ? segno(v, 'ant') : segno(g.Changes[RIS[k]], 'delta')) + '</span>' +
           '<span class="prod">' + FAB[k] + ' <b>' + g[EDI[k]] + '</b>' + (ve ? ' ' + segno(ve, 'ant') : (g.Changes[EDI[k]] ? ' ' + segno(g.Changes[EDI[k]], 'delta') : '')) + '</span></div>';
-      }).join('') + self.segnalini(g);
+      }).join('') + self.segnalini(g, a && a.scatta);
       self.rocca(chi, g, a);
     });
     this.disegnaAlto(); this.disegnaCentro(); this.disegnaMano();
@@ -108,12 +114,14 @@
     else giro.innerHTML = '<span class="suo">Opponent\'s turn</span><span>Round ' + p.round + '</span>';
   };
 
-  Battaglia.prototype.segnalini = function (g) {
+  // scatta = segnalini che la carta selezionata farebbe arrivare a 100 (l'anello pulsa)
+  Battaglia.prototype.segnalini = function (g, scatta) {
     var h = '';
     g.TokenNames.entries().forEach(function (e) {
       if (e[1] === 'none') return;
       var v = Math.round(PHP.num(g.TokenValues.get(e[0])));
-      h += '<div class="seg' + (v >= 100 ? ' pieno' : '') + '" style="--v:' + v + '" title="' + e[1] + '"><img src="' + UI.kwIcona(e[1]) + '" alt=""><small>' + v + '</small></div>';
+      h += '<button class="seg' + (v >= 100 ? ' pieno' : '') + (scatta && scatta.indexOf(e[1]) >= 0 ? ' scatta' : '') + '" style="--v:' + v + '" data-kw="' + e[1] + '" data-v="' + v + '" aria-label="' + e[1] + ' token">' +
+        '<img src="' + UI.kwIcona(e[1]) + '" alt=""><small>' + v + '</small></button>';
     });
     return '<div class="segnalini">' + h + '</div>';
   };
@@ -242,6 +250,14 @@
           }
           lato.appendChild(modi);
         }
+        if (giocabile) {
+          var pr = self.p.anteprima(1, pos, d.modi > 0 ? 1 : 0), sc = pr && pr.anteprima ? pr.anteprima.scatta : [];
+          sc.forEach(function (kw) {
+            var e = Segnalini.effetto(kw, id);
+            lato.appendChild(el('div', 'avvisa-seg', '<img src="' + UI.kwIcona(kw) + '" alt=""><div><b>' + kw + ' token reaches 100!</b>' +
+              '<span>' + e.nome + ': ' + e.testo + '</span></div>'));
+          });
+        }
         var az = el('div', 'azioni');
         var scarta = el('button', 'btn', 'Discard');
         var gioca = el('button', 'btn oro' + (!giocabile || d.modi > 0 ? ' spento' : ''), 'Play');
@@ -276,12 +292,23 @@
       var r = self.p.usaCarta(1, azione, pos, modo);
       if (r.errore) { UI.avviso(r.errore); self.bloccato = false; self.aggiorna(); return; }
       self.app.salvaPartita(self);
-      self.bloccato = false;
       self.aggiorna();
-      if (self.p.stato !== 'in corso') return self.finale();
-      if (self.p.corrente === 1) UI.avviso('Play again!');
-      else self.turnoCpu();
+      self.scatti(r.segnalini, id, 1, function () {
+        self.bloccato = false;
+        if (self.p.stato !== 'in corso') return self.finale();
+        if (self.p.corrente === 1) UI.avviso('Play again!');
+        else self.turnoCpu();
+      });
     });
+  };
+
+  // segnalini arrivati a 100 con l'ultima giocata: uno alla volta, poi si prosegue
+  Battaglia.prototype.scatti = function (lista, id, chi, poi) {
+    var self = this, l = (lista || []).slice();
+    (function prossimo() {
+      if (!l.length || self.chiuso) return poi();
+      Segnalini.scatto(l.shift(), id, chi, prossimo);
+    })();
   };
 
   Battaglia.prototype.turnoCpu = function () {
@@ -298,10 +325,13 @@
         var r = self.p.usaCarta(2, m.azione, m.pos, m.modo);
         if (r.errore) { console.error('mossa della CPU rifiutata', r.errore, m); self.p.usaCarta(2, 'discard', m.pos, 0); }
         self.app.salvaPartita(self);
-        self.bloccato = false;
         self.aggiorna();
-        if (self.p.stato !== 'in corso') return self.finale();
-        if (self.p.corrente === 2) self.turnoCpu();
+        self.scatti(r.segnalini, id, 2, function () {
+          if (self.chiuso) return;
+          self.bloccato = false;
+          if (self.p.stato !== 'in corso') return self.finale();
+          if (self.p.corrente === 2) self.turnoCpu();
+        });
       });
     }, 650);
   };
