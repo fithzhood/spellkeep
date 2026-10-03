@@ -98,22 +98,51 @@
       r.addEventListener('click', function () { self.lente(d.id); });
       righe.appendChild(r);
     });
-    // segnalino: uno solo per mazzo; tocco = passa alla keyword successiva fra quelle con segnalino.
-    // Scelto a mano, resta anche aggiungendo o togliendo carte.
+    // segnalino: uno solo per mazzo, scelto da un menu a tendina (con l'effetto e quante carte del mazzo hanno
+    // quella keyword). Scelto a mano, resta anche aggiungendo o togliendo carte.
     var seg = s.querySelector('.segnalini-mazzo'); seg.innerHTML = '<span class="etic">Token</span>';
     var nome = (m.segnalini || [])[0] || 'none';
-    var bt = el('button', '', nome === 'none' ? '—' : '<img src="' + UI.kwIcona(nome) + '" alt="">' + nome);
-    bt.addEventListener('click', function () {
-      var giro = ['none'].concat(Motore.SEGNALINI), j = (giro.indexOf(nome) + 1) % giro.length;
-      m.segnalini = giro[j] === 'none' ? [] : [giro[j]];
-      m.segnaliniScelti = true;
-      self.pr.salva(); self.disegna();
-      if (giro[j] !== 'none') { var e = Segnalini.effetto(giro[j]); UI.avviso(giro[j] + ' token at 100 · ' + e.nome + ': ' + e.testo); }
-    });
+    var bt = el('button', 'scegli-token', (nome === 'none' ? 'None' : '<img src="' + UI.kwIcona(nome) + '" alt="">' + nome) + '<i class="freccia">▾</i>');
+    bt.addEventListener('click', function () { self.tendinaToken(bt); });
     seg.appendChild(bt);
     var vis = el('button', 'vista-mazzo', aCarte ? 'List' : 'Cards');
     vis.addEventListener('click', function () { self.pr.d.imp.mazzoCarte = !aCarte; self.pr.salva(); self.disegna(); });
     seg.appendChild(vis);
+  };
+
+  // menu a tendina dei segnalini, sopra il pulsante
+  Editor.prototype.tendinaToken = function (bt) {
+    var self = this, m = this.pr.mazzo(this.i), ora = (m.segnalini || [])[0] || 'none';
+    var conta = {};
+    ['C', 'U', 'R'].forEach(function (r) {
+      m[r].forEach(function (id) {
+        UI.dati(id).keyword.map(UI.kwNome).forEach(function (k) { conta[k] = (conta[k] || 0) + 1; });
+      });
+    });
+    var velo = el('div', 'velo-tendina'), menu = el('div', 'pannello tendina-token');
+    ['none'].concat(Motore.SEGNALINI).forEach(function (k) {
+      var e = k === 'none' ? null : Segnalini.effetto(k);
+      var v = el('button', 'voce-token' + (k === ora ? ' su' : ''),
+        (k === 'none' ? '<span class="ico-vuota"></span>' : '<img src="' + UI.kwIcona(k) + '" alt="">') +
+        '<span class="t"><b>' + (k === 'none' ? 'No token' : k) + '</b><small>' +
+        (k === 'none' ? 'The deck plays without a token' : e.nome + ' · ' + (conta[k] || 0) + ' ' + k + ' card' + (conta[k] === 1 ? '' : 's') + ' in deck') +
+        '</small></span>' + (k === ora ? '<i class="spunta">✓</i>' : ''));
+      if (e) v.title = e.testo;
+      v.addEventListener('click', function () {
+        m.segnalini = k === 'none' ? [] : [k];
+        m.segnaliniScelti = true;
+        self.pr.salva(); velo.remove(); self.disegna();
+      });
+      menu.appendChild(v);
+    });
+    velo.addEventListener('click', function (ev) { if (ev.target === velo) velo.remove(); });
+    velo.appendChild(menu); document.body.appendChild(velo);
+    // sopra il pulsante, allineato a destra della colonna; se non c'e' spazio sopra, scorre
+    var r = bt.getBoundingClientRect();
+    menu.style.right = Math.max(8, innerWidth - r.right) + 'px';
+    menu.style.bottom = Math.max(8, innerHeight - r.top + 6) + 'px';
+    menu.style.maxHeight = (r.top - 14) + 'px';
+    var su = menu.querySelector('.su'); if (su) su.scrollIntoView({ block: 'nearest' });
   };
 
   // un tocco apre la carta (con Aggiungi/Togli); il trascinamento fa solo scorrere la griglia.

@@ -803,3 +803,27 @@ body:has(.tut-faro) .velo { z-index: 73; background: transparent !important; }
 .tut-fum { transition: opacity .14s; }
 .tut-fum.sposta { opacity: 0; }
 .tut-faro { transition: opacity .45s, box-shadow .45s, left .4s ease, top .4s ease, width .4s ease, height .4s ease; }
+/* nel tutorial la spiegazione del token sta a destra: al centro il fumetto ne copriva sempre un pezzo */
+body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16px + var(--lato)); }
+/* token a 100: si chiude solo con Continue; sta sopra i blocchi del tutorial, cosi' il pulsante si puo' premere */
+.scatto-seg { z-index: 77; cursor: default; }
+.scatto-seg .s-ok { margin-top: 8px; min-width: 130px; }
+.tut-fum { transition: opacity .16s; }
+.tut-fum.sposta { opacity: 0; transition: none; }
+
+/* editor: token scelto da un menu a tendina */
+.segnalini-mazzo .scegli-token { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+.segnalini-mazzo .scegli-token .freccia { font-style: normal; color: var(--oro); margin-left: 2px; }
+.velo-tendina { position: fixed; inset: 0; z-index: 60; background: rgba(8,9,14,.35); animation: dissolve .15s; }
+.tendina-token { position: fixed; width: min(300px, calc(100vw - 16px)); overflow-y: auto; padding: 4px; display: flex; flex-direction: column; gap: 2px;
+  background: rgba(18,17,26,.98); box-shadow: 0 10px 30px rgba(0,0,0,.7); animation: tendina-su .18s ease-out; }
+@keyframes tendina-su { from { opacity: 0; transform: translateY(8px); } }
+.voce-token { display: flex; align-items: center; gap: 9px; min-height: 46px; padding: 4px 8px; border-radius: 7px; text-align: left; color: inherit; font: inherit; border: 0; background: none; flex: none; }
+.voce-token:active { background: rgba(245,236,218,.1); }
+.voce-token.su { background: rgba(226,179,92,.16); box-shadow: inset 0 0 0 1px rgba(226,179,92,.5); }
+.voce-token img, .voce-token .ico-vuota { width: var(--kw2, 32px); height: var(--kw2, 32px); flex: none; image-rendering: pixelated; }
+.voce-token .ico-vuota { border-radius: 50%; border: 2px dashed rgba(245,236,218,.3); box-sizing: border-box; }
+.voce-token .t { flex: 1; min-width: 0; }
+.voce-token b { display: block; font-size: .74rem; }
+.voce-token small { display: block; font-size: .6rem; color: var(--ink2); }
+.voce-token .spunta { font-style: normal; color: var(--oro); font-weight: 900; }

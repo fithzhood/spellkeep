@@ -92,6 +92,7 @@
     var s = passi[i], prima = passi[i - 1];
     if (prima && prima.chiudiPoi) document.querySelectorAll(prima.chiudiPoi).forEach(function (x) { x.remove(); });
     this.i = i;
+    this.nascondi();
     this.azione(false);
     this.fum.classList.toggle('attesa', !!s.attesa);
     this.fum.querySelector('h3').textContent = s.t || '';
@@ -117,7 +118,7 @@
         s.fai(self, function () {
           if (self.i !== i) return;
           self.azione(false);
-          if (s.dopo) self.fum.querySelector('p').innerHTML += ' ' + (typeof s.dopo === 'function' ? s.dopo(self) : s.dopo);
+          if (s.dopo) { self.nascondi(); self.fum.querySelector('p').innerHTML += ' ' + (typeof s.dopo === 'function' ? s.dopo(self) : s.dopo); }
           self.avanti.disabled = false;
           self.posiziona();
         });
@@ -155,6 +156,7 @@
 
   // durante una mossa: velo leggero e fumetto ridotto, cosi' si vede cosa succede
   Regia.prototype.azione = function (si) {
+    if (this.fum.classList.contains('mini') !== !!si) this.nascondi();   // cambia misura: si nasconde prima
     this.inAzione = si;
     this.faro.classList.toggle('leggero', si);
     this.fum.classList.toggle('mini', si);
@@ -192,28 +194,43 @@
     this.blocchi.forEach(function (x, k) { var q = rett[k]; x.style.cssText = 'left:' + q[0] + 'px;top:' + q[1] + 'px;width:' + Math.max(0, q[2]) + 'px;height:' + Math.max(0, q[3]) + 'px'; });
     if (s.attesa && !this.inAzione) this.mostraDito();
     // fumetto: fra angoli e bordi, quello che copre meno il bersaglio e quello che sta succedendo
-    var f = this.fum, fw = f.offsetWidth, fh = f.offsetHeight, g = 8;
+    var f = this.fum, g = 8, fw, fh;
     var evita = [];
-    if (buco) evita.push([buco, 4]);
+    if (buco) evita.push([buco, 60]);          // il bersaglio non si copre mai, se c'e' un posto libero
     ['.lente', '.spiega-seg', '.entrata', '.scatto-seg .riq'].forEach(function (q) { var x = rettangolo(q); if (x) evita.push([x, 3]); });
     if (s.zona) s.zona.forEach(function (q) { var x = rettangolo(q); if (x) evita.push([x, 1]); });
-    var pos = [[g, g], [W - fw - g, g], [(W - fw) / 2, g], [g, H - fh - g], [W - fw - g, H - fh - g], [(W - fw) / 2, H - fh - g],
-      [g, (H - fh) / 2], [W - fw - g, (H - fh) / 2], [(W - fw) / 2, (H - fh) / 2]];
-    var meglio = pos[0], costo = Infinity;
-    pos.forEach(function (p, k) {
-      var box = { left: p[0], top: p[1], right: p[0] + fw, bottom: p[1] + fh }, c = k * 0.5;   // a parita', l'ordine della lista
-      evita.forEach(function (e) { c += sovrapp(box, e[0]) * e[1]; });
-      if (c < costo) { costo = c; meglio = p; }
-    });
+    // larghezza piena; se non c'e' un posto che non copra niente, piu' stretto (sta nelle strisce ai lati della
+    // carta aperta, che resta dov'e' nel gioco)
+    var meglio = null, costo = Infinity, largo = null, vecchia = f.style.width;
+    var larghezze = f.classList.contains('mini') ? [null] : [null, 220, 180];
+    for (var li = 0; li < larghezze.length && costo > 20; li++) {
+      f.style.width = larghezze[li] ? larghezze[li] + 'px' : '';
+      fw = f.offsetWidth; fh = f.offsetHeight;
+      var pos = [[g, g], [W - fw - g, g], [(W - fw) / 2, g], [g, H - fh - g], [W - fw - g, H - fh - g], [(W - fw) / 2, H - fh - g],
+        [g, (H - fh) / 2], [W - fw - g, (H - fh) / 2], [(W - fw) / 2, (H - fh) / 2]];
+      pos.forEach(function (p, k) {
+        var box = { left: p[0], top: p[1], right: p[0] + fw, bottom: p[1] + fh }, c = k * 0.5 + li * 2;   // a parita', ordine e larghezza piena
+        evita.forEach(function (e) { c += sovrapp(box, e[0]) * e[1]; });
+        if (c < costo) { costo = c; meglio = p; largo = larghezze[li]; }
+      });
+    }
+    f.style.width = largo ? largo + 'px' : '';
+    fw = f.offsetWidth; fh = f.offsetHeight;
     // sempre dentro lo schermo
     var x = Math.round(Math.max(g, Math.min(meglio[0], W - fw - g))), y = Math.round(Math.max(g, Math.min(meglio[1], H - fh - g)));
     // cambiare posto: sparisce e ricompare li' (attraversare lo schermo scivolando sembrava strano)
-    var ox = parseFloat(f.style.left), oy = parseFloat(f.style.top);
-    if (isNaN(ox) || (Math.abs(ox - x) < 3 && Math.abs(oy - y) < 3)) { f.style.left = x + 'px'; f.style.top = y + 'px'; return; }
+    // misura e posto cambiano a fumetto invisibile (sparisce di colpo, ricompare in dissolvenza): mai un attimo
+    // con il testo nuovo, o la misura nuova, nel posto vecchio
+    var ox = parseFloat(f.style.left), oy = parseFloat(f.style.top), nuova = f.style.width;
+    var fermo = !isNaN(ox) && Math.abs(ox - x) < 3 && Math.abs(oy - y) < 3 && nuova === vecchia;
     clearTimeout(this.tSposta);
+    if (fermo && !f.classList.contains('sposta')) return;
     f.classList.add('sposta');
-    this.tSposta = setTimeout(function () { f.style.left = x + 'px'; f.style.top = y + 'px'; f.classList.remove('sposta'); }, 140);
+    f.style.width = nuova; f.style.left = x + 'px'; f.style.top = y + 'px';
+    this.tSposta = setTimeout(function () { f.classList.remove('sposta'); }, 30);
   };
+  // prima di cambiare il testo: via di colpo, cosi' il testo nuovo non si vede nel posto vecchio
+  Regia.prototype.nascondi = function () { this.fum.classList.add('sposta'); };
 
   // una mossa del copione (avversario, o salti in avanti): la carta entra e il motore la esegue
   Regia.prototype.gioca = function (chi, nome, fn, azione) {
@@ -250,6 +267,7 @@
     pr.d.tutorial[this.lez.id] = true; pr.salva();
     var k = LEZIONI.indexOf(this.lez), dopo = LEZIONI[k + 1];
     this.bersaglio = null;
+    this.nascondi();
     this.fum.classList.remove('attesa', 'mini');
     this.fum.querySelector('h3').textContent = 'Lesson complete';
     this.fum.querySelector('p').innerHTML = '“' + this.lez.titolo + '” done.' + (dopo ? ' Next lesson: <b>' + dopo.titolo + '</b>.' : ' That is everything: time to play!');

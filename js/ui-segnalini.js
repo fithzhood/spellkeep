@@ -56,14 +56,14 @@
     return k ? '+' + k.guadagno + ' when you play a ' + kw + ' card, +' + k.bonus + ' more for each other ' + kw + ' card in your hand.' : '';
   }
 
-  // il riquadro grande: si chiude da solo, o al tocco
+  // il riquadro grande: resta finche' non si preme Continue (richiesta di Luca: da solo spariva prima di leggerlo)
   function scatto(kw, id, chi, poi) {
     var e = effetto(kw, id), v = el('div', 'scatto-seg ' + (chi === 1 ? 'mio' : 'suo'));
     v.innerHTML = '<div class="onde"><i></i><i></i><i></i></div>' +
       '<div class="riq pannello">' +
         '<div class="ico"><img src="' + UI.kwIcona(kw) + '" alt=""></div>' +
         '<div class="testi"><div class="chi">' + (chi === 1 ? 'Your' : 'Enemy') + ' ' + kw + ' token · <b>100</b></div>' +
-        '<h3>' + e.nome + '</h3><p>' + e.testo + '</p></div>' +
+        '<h3>' + e.nome + '</h3><p>' + e.testo + '</p><button class="btn oro s-ok">Continue</button></div>' +
       '</div>';
     document.body.appendChild(v);
     // l'anello del segnalino, nella colonna di chi gioca, esplode
@@ -75,8 +75,7 @@
       v.classList.add('via'); setTimeout(function () { v.remove(); }, 260);
       if (poi) poi();
     }
-    v.addEventListener('click', chiudi);
-    setTimeout(chiudi, 2600);
+    v.querySelector('.s-ok').addEventListener('click', chiudi);
   }
 
   function spiega(kw, valore) {
