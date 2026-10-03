@@ -163,20 +163,27 @@
     }
   };
 
+  // al centro restano le carte dell'ultimo turno di ciascuno (tue a sinistra, sue a destra): alcune carte hanno
+  // effetti in piu' se giocate dopo un certo tipo di carta, e cosi' si vede sempre cosa e' stato giocato per ultimo
   Battaglia.prototype.disegnaCentro = function () {
-    var centro = this.q('.centro'), g = this.p.g[2];
+    var centro = this.q('.centro'), self = this;
     centro.innerHTML = '';
-    if (!g.LastCard) return;
-    var ult = el('div', 'ultime');
-    g.LastCard.entries().forEach(function (e) {
-      var id = PHP.num(e[1]); if (!id) return;
-      var az = g.LastAction.get(e[0]);
-      var w = el('div', 'ultima', '<span class="etic' + (az === 'discard' ? ' scartata' : '') + '">' + (az === 'discard' ? 'discarded' : 'played') + '</span>');
-      var c = UI.carta(id);
-      c.addEventListener('click', function () { UI.apriLente(id, { nota: az === 'discard' ? 'Discarded by the opponent' : 'Played by the opponent', notaNeutra: true }); });
-      w.appendChild(c); ult.appendChild(w);
+    var fila = el('div', 'ultime-due');
+    [[1, 'You', 'by you'], [2, 'Opponent', 'by the opponent']].forEach(function (x) {
+      var g = self.p.g[x[0]], ult = el('div', 'ultime');
+      if (g.LastCard) g.LastCard.entries().forEach(function (e) {
+        var id = PHP.num(e[1]); if (!id) return;
+        var az = g.LastAction.get(e[0]);
+        var w = el('div', 'ultima', '<span class="etic' + (az === 'discard' ? ' scartata' : '') + '">' + (az === 'discard' ? 'discarded' : 'played') + '</span>');
+        var c = UI.carta(id);
+        c.addEventListener('click', function () { UI.apriLente(id, { nota: (az === 'discard' ? 'Discarded ' : 'Played ') + x[2], notaNeutra: true }); });
+        w.appendChild(c); ult.appendChild(w);
+      });
+      if (!ult.children.length) return;
+      var grp = el('div', 'ultime-gruppo ' + (x[0] === 1 ? 'mie' : 'sue'), '<div class="ult-chi">' + x[1] + '</div>');
+      grp.appendChild(ult); fila.appendChild(grp);
     });
-    if (ult.children.length) centro.appendChild(ult);
+    if (fila.children.length) centro.appendChild(fila);
   };
 
   Battaglia.prototype.disegnaMano = function () {

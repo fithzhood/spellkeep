@@ -871,3 +871,12 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .opzioni-fila .riga { min-height: 44px; }
 .opzioni-fila .riga span:first-child { white-space: nowrap; }
 .scheda-avv .premio b.primo { display: inline; font-family: var(--testo); font-size: inherit; letter-spacing: 0; text-transform: none; line-height: inherit; }
+
+/* centro: ultime carte di entrambi, tue a sinistra e sue a destra */
+.ultime-due { display: flex; gap: 22px; align-items: flex-end; justify-content: center; pointer-events: auto; }
+.ultime-gruppo { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.ult-chi { font-family: var(--display); font-size: .5rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.8); }
+.ultime-gruppo.mie .ult-chi { color: #9cc3f5; }
+.ultime-gruppo.sue .ult-chi { color: #ff9d8f; }
+.ultime-gruppo .ultime { gap: 4px; }

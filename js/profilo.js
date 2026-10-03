@@ -59,10 +59,11 @@
     return avversari().filter(function (a) { return a.nome === (nome || null); })[0] || avversari()[0];
   }
 
-  // il booster preferito di un avversario: la tribu' per i rivali; per gli altri la keyword piu' presente nel mazzo
+  // il booster preferito di un avversario: raro per gli avanzati; la tribu' per i rivali; per gli altri la keyword piu' presente nel mazzo
   // (fra quelle che hanno un booster), o il colore di costo piu' presente. Il giullare gioca a caso: un tipo a caso.
   function boosterPreferito(nome) {
     var a = avversario(nome), id;
+    if (a.tipo === 'sfidante') return 'raro';        // gli avanzati danno un booster raro
     if (a.tribu) { id = 'kw-' + a.tribu.toLowerCase().replace(/ /g, '_'); if (tipoBooster(id)) return id; }
     var mazzo = a.mazzo || (a.sfida && a.sfida.mazzo);
     if (!mazzo) return null;                       // il giullare: un tipo a caso quando lo si vince
