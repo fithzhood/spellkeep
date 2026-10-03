@@ -782,3 +782,5 @@ button.seg::after { content: ""; position: absolute; inset: -9px; border-radius:
 .tp-avv-c b { font-size: .62rem; color: var(--oro); font-family: var(--display); letter-spacing: .08em; text-transform: uppercase; }
 /* valore delle quantita' variabili nel testo della carta: (N=5) */
 .carta .eff .nval { color: #ffd76e; font-weight: 800; white-space: nowrap; }
+/* caselle avversari: i nomi lunghi (Silas Quickfinger, Tamsin the Beastmaster) vanno a capo invece di tagliarsi */
+.caselle .avv .nome { font-size: .58rem; overflow-wrap: anywhere; -webkit-line-clamp: 3; }
