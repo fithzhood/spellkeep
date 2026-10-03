@@ -389,6 +389,25 @@
         premi('play', 'Play it', 'Press <b>Play</b> and watch the ring.'),
         { t: 'It fired!', x: 'At 100 the token fires its effect, then starts again from 0. Each keyword token does something different, and in the deck editor you choose which one your deck uses.', faro: '.ris-io .seg' }
       ] },
+    { id: 'opzioni', titolo: 'Game options', sotto: 'Hidden cards, long games and challenges.',
+      campo: { mano: ['Scout tower', 'Fortified wall', 'Knight', 'Archer', 'Sculptor', 'Chapel', 'Poison frog', 'Maelstrom'], manoLui: MANO_BASE,
+        io: { Bricks: 15, Gems: 15, Recruits: 15 } },
+      passi: [
+        { t: 'Open cards', x: 'In a normal game you can see the opponent’s hand at the top of the screen, so you know what they could play next.', faro: '.alto' },
+        { t: 'Hidden cards', x: 'With the <b>Hidden cards</b> option on, you only see the backs of their cards. It is harder, and closer to a real duel.', faro: '.alto',
+          fai: function (T, ok) { T.b.p.nascoste = true; T.b.aggiorna(); attendi(500, ok); },
+          dopo: 'Some cards can still reveal a card of theirs: it stays face up.' },
+        { t: 'Long game', x: 'With the <b>Long game</b> option on, castles start bigger and the goals are higher.', faro: '.rocca.io',
+          fai: function (T, ok) {
+            var p = T.b.p; p.lunga = true; p.cfg = Motore.CONFIG.lunga;
+            [1, 2].forEach(function (n) { p.g[n].Tower = p.cfg.init_tower; p.g[n].Wall = p.cfg.init_wall; });
+            T.b.aggiorna(); attendi(500, ok);
+          },
+          dopo: 'Tower 45 and wall 38 at the start; you win at <b>150</b> tower or <b>600</b> resources. Games last longer, and every coin reward is <b>×1.5</b>.' },
+        { t: 'Challenges', x: 'The <b>Advanced</b> opponents are challenges: they start with their own special castle and deck, and you can’t play <b>rare</b> cards (the gold star) against them. <b>Maelstrom</b> is a rare card.',
+          faro: function (T) { return document.querySelector(selCarta(T.b, 'Maelstrom')); } },
+        { t: 'Where to set them', x: 'You switch <b>Hidden cards</b> and <b>Long game</b> on or off in the <b>Choose your opponent</b> screen, just before pressing Start.' }
+      ] },
     { id: 'mazzi', titolo: 'Decks and boosters', sotto: 'Your collection, the shop, the opponents.',
       palco: function (T) { palcoMazzi(T); },
       passi: [

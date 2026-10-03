@@ -827,3 +827,26 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .voce-token b { display: block; font-size: .74rem; }
 .voce-token small { display: block; font-size: .6rem; color: var(--ink2); }
 .voce-token .spunta { font-style: normal; color: var(--oro); font-weight: 900; }
+
+/* avversari battuti e traguardi */
+.caselle .avv { position: relative; }
+.caselle .avv .vinto { position: absolute; top: 4px; right: 5px; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 99px; display: inline-flex;
+  align-items: center; justify-content: center; gap: 1px; background: #2f6b3a; color: #d9ffd9; font-weight: 900; font-size: .64rem; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
+.caselle .avv .vinto small { font-size: .5rem; opacity: .85; }
+.fascia-t { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; }
+.fascia-premio { margin-left: auto; font-family: var(--testo); letter-spacing: 0; text-transform: none; font-size: .6rem; color: var(--ink2); font-weight: 700; }
+.fascia-premio.preso { color: var(--su); }
+.scheda-avv .primo { color: var(--oro); font-weight: 800; }
+.bonus-fine { display: flex; flex-direction: column; gap: 3px; width: 100%; }
+.bonus-riga { display: flex; justify-content: space-between; gap: 10px; font-size: .72rem; padding: 3px 8px; border-radius: 6px; background: rgba(226,179,92,.12);
+  box-shadow: inset 0 0 0 1px rgba(226,179,92,.35); animation: tendina-su .4s ease-out both; }
+.bonus-riga b { color: var(--oro); white-space: nowrap; }
+.regalo-fine { animation: carica-avviso 1s ease-in-out infinite alternate; }
+.caselle .avv.battuto { padding-right: 26px; }
+/* fine partita con bonus: bonus e regalo a sinistra, scelta del booster a destra */
+.finale .riquadro { max-height: calc(100svh - 12px); overflow-y: auto; }
+.finale .riquadro.largo { max-width: min(760px, calc(100vw - 16px)); }
+.premi-fila { display: flex; gap: 14px; align-items: center; justify-content: center; width: 100%; }
+.premi-sx { display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex: 1 1 0; min-width: 0; }
+.premi-fila .scelta-premio { flex: none; }
+.riquadro.largo .premi-sx .regalo-fine { align-self: center; }

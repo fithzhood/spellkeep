@@ -135,5 +135,12 @@
     f.appendChild(r); document.body.appendChild(f);
   }
 
-  radice.UIBooster = { pacchetto: pacchetto, apri: apri, sceltaPremio: sceltaPremio, finestraPremio: finestraPremio, descrizione: descrizione, riepilogo: riepilogo };
+  // i booster in regalo (traguardi), uno dopo l'altro; poi() quando sono finiti
+  function apriRegali(app, poi) {
+    var r = app.profilo.apriRegalo();
+    if (!r) { if (poi) poi(); return; }
+    apri(r.tipo, r.esito, function () { apriRegali(app, poi); });
+  }
+
+  radice.UIBooster = { pacchetto: pacchetto, apri: apri, sceltaPremio: sceltaPremio, finestraPremio: finestraPremio, descrizione: descrizione, riepilogo: riepilogo, apriRegali: apriRegali };
 })(window);

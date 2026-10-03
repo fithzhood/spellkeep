@@ -375,12 +375,30 @@
       '<h2 class="' + (esito === 1 ? 'vinta' : esito === 2 ? 'persa' : '') + '">' + (esito === 1 ? 'Victory' : esito === 2 ? 'Defeat' : 'Draw') + '</h2>' +
       volto(this.app, this.av.nome, this.av.titolo, '', esito === 2 ? 'vince' : esito === 1 ? 'perde' : '') + '</div>' +
       '<p>' + testo + ' · ' + p.round + (p.round === 1 ? ' round' : ' rounds') + '</p><div class="premio">+ ' + UI.moneta(premio) + '</div>';
+    // traguardi: prima vittoria, fascia completata, tutti battuti
+    var pr = this.app.profilo, bonus = pr.ultimiBonus || [];
+    // bonus e regalo a sinistra, scelta del booster a destra: in colonna non stavano nell'altezza del telefono
+    var fila = el('div', 'premi-fila'), sinistra = el('div', 'premi-sx');
+    if (bonus.length) {
+      var lb = el('div', 'bonus-fine');
+      bonus.forEach(function (b) {
+        lb.appendChild(el('div', 'bonus-riga', '<span>🏆 ' + b.testo + '</span><b>+ ' + UI.moneta(b.monete) + (b.booster ? ' + ' + b.booster + (b.comune ? ' booster' : ' rare booster') + (b.booster > 1 ? 's' : '') : '') + '</b>'));
+      });
+      sinistra.appendChild(lb);
+    }
+    if (pr.d.regali && pr.d.regali.length) {
+      var rg = el('button', 'btn oro regalo-fine', 'Open gift booster' + (pr.d.regali.length > 1 ? ' (' + pr.d.regali.length + ')' : ''));
+      rg.addEventListener('click', function () { UIBooster.apriRegali(self.app, function () { rg.remove(); }); });
+      sinistra.appendChild(rg);
+    }
+    if (sinistra.children.length) fila.appendChild(sinistra);
     // vittoria: tre booster, se ne apre uno. Chi esce senza sceglierlo lo ritrova nella home.
     if (esito === 1 && this.app.profilo.d.premio) {
       var sc = el('div', 'scelta-premio', '<div class="scelta-t">Choose a booster</div>');
       UIBooster.sceltaPremio(sc, this.app, function () { sc.remove(); });
-      r.appendChild(sc);
+      fila.appendChild(sc);
     }
+    if (fila.children.length) { if (fila.children.length > 1) r.classList.add('largo'); r.appendChild(fila); }
     var az = el('div', 'azioni');
     var neg = el('button', 'btn oro', 'Shop'), riv = el('button', 'btn', 'Rematch'), casa = el('button', 'btn', 'Home');
     neg.addEventListener('click', function () { f.remove(); self.chiuso = true; self.app.negozio(); });

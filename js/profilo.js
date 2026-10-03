@@ -22,8 +22,14 @@
     prezzoBooster: 40, prezzoBoosterRaro: 150,
     boosterPerNegozio: 3, boosterPremio: 3,           // nel negozio, e fra cui scegliere dopo una vittoria
     probBoosterRaro: 0.05,                            // per ogni posto: quanto spesso esce il booster raro
-    rivendita: { C: 4, U: 10, R: 25 }                 // una carta doppia trovata in un booster si rivende da sola
+    rivendita: { C: 4, U: 10, R: 25 },                // una carta doppia trovata in un booster si rivende da sola
+    // traguardi (richiesta di Luca, 4/10, "sii generoso"): prima vittoria contro un avversario = il doppio della sua
+    // vincita in piu' e un booster in regalo; fascia completata e tutti battuti = monete e booster rari in regalo
+    primaVittoria: { moltiplica: 2, booster: 1 },
+    fascia: { base: { monete: 300, booster: 2 }, rivale: { monete: 1500, booster: 3 }, sfidante: { monete: 2500, booster: 3 } },
+    tutti: { monete: 5000, booster: 5 }
   };
+  var NOMI_FASCIA = { base: 'Basic', rivale: 'Medium', sfidante: 'Advanced' };
 
   // ------------------------------------------------------------------ avversari
   // Tre fasce (scelta di Luca, 3/10/2026), senza livelli dentro la fascia:
@@ -173,6 +179,54 @@
 
   // ------------------------------------------------------------------ fine partita
   // esito: 1 vinta, 2 persa, 0 pari. Restituisce le monete guadagnate.
+  // chiave di un avversario nelle statistiche (il giullare non ha nome)
+  function chiaveAvv(nome) { return nome || 'Jester'; }
+  Profilo.prototype.battuto = function (nome) { return (this.d.stat.sfideVinte[chiaveAvv(nome)] || 0); };
+  // per fascia: quanti battuti su quanti, e se il premio e' gia' stato dato
+  Profilo.prototype.fasce = function () {
+    var self = this, r = {};
+    avversari().forEach(function (a) {
+      var f = r[a.tipo] = r[a.tipo] || { tot: 0, battuti: 0, nome: NOMI_FASCIA[a.tipo], premio: ECONOMIA.fascia[a.tipo] };
+      f.tot++; if (self.battuto(a.nome)) f.battuti++;
+    });
+    var dati = this.d.traguardi || {};
+    Object.keys(r).forEach(function (k) { r[k].dato = !!dati[k]; });
+    return r;
+  };
+  // dopo una vittoria: prima vittoria, fasce completate, tutti battuti. Restituisce l'elenco dei bonus dati.
+  Profilo.prototype.traguardi = function (nome, prima, lunga) {
+    var self = this, e = ECONOMIA, bonus = [], t = this.d.traguardi = this.d.traguardi || {};
+    this.d.regali = this.d.regali || [];
+    if (prima) {
+      var m = avversario(nome).premio * e.primaVittoria.moltiplica;
+      if (lunga) m = Math.round(m * e.moltiplicaLunga);
+      bonus.push({ testo: 'First victory against ' + avversario(nome).titolo, monete: m, booster: e.primaVittoria.booster, comune: true });
+    }
+    var fasce = this.fasce(), tutte = true;
+    Object.keys(fasce).forEach(function (k) {
+      var f = fasce[k];
+      if (f.battuti < f.tot) { tutte = false; return; }
+      if (t[k]) return;
+      t[k] = true;
+      bonus.push({ testo: f.nome + ' tier complete!', monete: f.premio.monete, booster: f.premio.booster });
+    });
+    if (tutte && !t.tutti) {
+      t.tutti = true;
+      bonus.push({ testo: 'Every opponent beaten!', monete: e.tutti.monete, booster: e.tutti.booster });
+    }
+    bonus.forEach(function (b) {
+      self.d.monete += b.monete;
+      for (var i = 0; i < b.booster; i++) self.d.regali.push(b.comune ? estraiTipi(1)[0] : 'raro');
+    });
+    return bonus;
+  };
+  // booster in regalo (traguardi): si aprono uno alla volta
+  Profilo.prototype.apriRegalo = function () {
+    if (!this.d.regali || !this.d.regali.length) return null;
+    var tipo = this.d.regali.shift();
+    return { tipo: tipo, esito: this.apriBooster(tipo) };
+  };
+
   Profilo.prototype.registraPartita = function (esito, opz) {
     var e = ECONOMIA, premio;
     if (opz.sfida) premio = esito === 1 ? avversario(opz.sfida).premio : esito === 0 ? e.pareggio : e.sconfitta;
@@ -182,7 +236,9 @@
     var s = this.d.stat;
     s.partite++;
     if (esito === 1) s.vinte++; else if (esito === 2) s.perse++; else s.pari++;
-    if (esito === 1 && opz.sfida) s.sfideVinte[opz.sfida] = (s.sfideVinte[opz.sfida] || 0) + 1;
+    var prima = esito === 1 && !this.battuto(opz.sfida);
+    if (esito === 1) s.sfideVinte[chiaveAvv(opz.sfida)] = (s.sfideVinte[chiaveAvv(opz.sfida)] || 0) + 1;
+    this.ultimiBonus = esito === 1 ? this.traguardi(opz.sfida, prima, opz.lunga) : [];
     // dopo una vittoria: tre booster fra cui sceglierne uno. Resta in attesa finche' non lo si apre.
     if (esito === 1) this.d.premio = estraiTipi(ECONOMIA.boosterPremio);
     this.d.partita = null;

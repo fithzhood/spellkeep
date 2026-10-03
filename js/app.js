@@ -39,6 +39,7 @@
       function voce(testo, oro, fn) { var b = el('button', 'btn' + (oro ? ' oro' : ''), testo); b.addEventListener('click', fn); nav.appendChild(b); }
       if (d.partita) voce('Continue game', true, function () { self.riprendi(); });
       else if (d.premio) voce('Open reward', true, function () { UIBooster.finestraPremio(self, function () { self.home(); }); });
+      if (d.regali && d.regali.length) voce('Open gift (' + d.regali.length + ')', true, function () { UIBooster.apriRegali(self, function () { self.home(); }); });
       voce('Play', !d.partita, function () { self.preparazione(); });
       voce('Decks', false, function () { new Editor(self, d.mazzoAttivo); });
       voce('Shop', false, function () { self.negozio(); });
@@ -64,14 +65,17 @@
       FASCE.forEach(function (f) {
         var qui = voci.filter(function (v) { return v.tipo === f[0]; });
         if (!qui.length) return;
-        var aperti = qui.filter(function (v) { return !v.chiusa; }).length;
-        lista.appendChild(el('div', 'fascia-t', f[1] + ' <small>' + aperti + '/' + qui.length + ' unlocked</small>'));
+        var aperti = qui.filter(function (v) { return !v.chiusa; }).length, fa = pr.fasce()[f[0]];
+        lista.appendChild(el('div', 'fascia-t', f[1] + ' <small>' + aperti + '/' + qui.length + ' unlocked · ' + fa.battuti + '/' + fa.tot + ' beaten</small>' +
+          '<span class="fascia-premio' + (fa.dato ? ' preso' : '') + '">' + (fa.dato ? '✓ Tier reward claimed' : 'Beat all: + ' + UI.moneta(fa.premio.monete) + ' + ' + fa.premio.booster + ' rare boosters') + '</span>'));
         var g = el('div', 'caselle');
         qui.forEach(function (v) {
-          var b = el('button', 'avv pannello' + (v.chiusa ? ' chiuso' : '') + (self.sceltaAvv === v.nome ? ' su' : ''));
+          var vinte = pr.battuto(v.nome);
+          var b = el('button', 'avv pannello' + (v.chiusa ? ' chiuso' : '') + (vinte ? ' battuto' : '') + (self.sceltaAvv === v.nome ? ' su' : ''));
           var tipo = v.tipo === 'rivale' ? v.tribu : v.tipo === 'sfidante' ? 'Challenger' : v.mazzoCasuale ? 'Random deck' : 'Starter deck';
           b.innerHTML = '<img src="' + avatar(v.nome) + '" alt=""><span class="t"><span class="nome">' + v.titolo + '</span>' +
-            '<span class="tipo">' + (v.chiusa ? '🔒 ' : '') + tipo + '</span><span class="premio">' + UI.moneta(v.premio) + '</span></span>';
+            '<span class="tipo">' + (v.chiusa ? '🔒 ' : '') + tipo + '</span><span class="premio">' + UI.moneta(v.premio) + '</span></span>' +
+            (vinte ? '<span class="vinto" title="Beaten ' + vinte + '×">✓' + (vinte > 1 ? '<small>' + vinte + '</small>' : '') + '</span>' : '');
           b.addEventListener('click', function () {
             if (v.chiusa) { UI.avviso('Unlock this opponent in the shop'); UI.scuoti(b); return; }
             self.preparazione(v.nome);
@@ -87,7 +91,8 @@
       var sf = this.sceltaAvv ? Avversari.trova(this.sceltaAvv).sfida : null;
       var av = Avversari.trova(this.sceltaAvv);
       o.appendChild(el('div', 'pannello scheda-avv', '<img src="' + avatar(av.nome) + '" alt=""><div><b>' + av.titolo + '</b>' +
-        '<p>' + av.descrizione + '</p><span class="premio">Win: ' + UI.moneta(av.premio) + '</span></div>'));
+        '<p>' + av.descrizione + '</p><span class="premio">Win: ' + UI.moneta(av.premio) +
+        (pr.battuto(av.nome) ? ' · beaten ' + pr.battuto(av.nome) + '×' : ' · <b class="primo">first win: + ' + UI.moneta(av.premio * 2) + ' and a booster</b>') + '</span></div>'));
       var mz = el('div', 'pannello riga', '<span>Deck<small>' + (pr.mazzoValido() ? pr.mazzo().nome : 'The deck needs 15 cards per rarity') + '</small></span>');
       var sm = el('div', 'scegli-mazzo');
       d.mazzi.forEach(function (m, k) {
