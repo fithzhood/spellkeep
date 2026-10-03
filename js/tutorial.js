@@ -1,6 +1,8 @@
-// Tutorial: lezioni brevi, ognuna su un concetto. Sono partite vere del motore pilotate da un copione:
-// un riflettore animato si sposta sugli elementi, un "dito" mostra i tocchi, le mosse le esegue il motore e il
-// fumetto spiega cosa e' successo. Si avanza con Next; in alcune lezioni l'ultimo passo lo fa il giocatore.
+// Tutorial: lezioni brevi, ognuna su un concetto. Sono partite vere del motore guidate da un copione.
+// Le mosse le fa il giocatore: tutto lo schermo e' bloccato tranne il punto che il passo chiede di toccare
+// (quattro riquadri trasparenti attorno al "buco" del riflettore fermano gli altri tocchi). Le mosse
+// dell'avversario e i salti in avanti li esegue il copione. Il fumetto si mette dove non copre ne' il bersaglio
+// ne' la carta in gioco, e mentre succede qualcosa si riduce a una striscia.
 // Niente salvataggi e niente statistiche: Battaglia riceve opz.tutorial e lascia a noi il dopo-mossa.
 (function (radice) {
   'use strict';
@@ -12,26 +14,46 @@
     return d.id;
   }
   function attendi(ms, fn) { return setTimeout(fn, ms); }
+  function posizione(b, chi, nome) {
+    var g = b.p.g[chi], id = idDi(nome);
+    for (var i = 1; i <= 8; i++) if (+g.Hand.get(i) === id) return i;
+    return 0;
+  }
+  function selCarta(b, nome) { return '.mano .carta[data-pos="' + posizione(b, 1, nome) + '"]'; }
+  function rettangolo(b) {
+    if (!b) return null;
+    var e = typeof b === 'function' ? b() : document.querySelector(b);
+    if (!e) return null;
+    var r = e.getBoundingClientRect();
+    return r.width ? r : null;
+  }
+  function sovrapp(a, b) {
+    var w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+    return w > 0 && h > 0 ? w * h : 0;
+  }
 
   // ------------------------------------------------------------------ il regista
   function Regia(app, lezione) {
-    this.app = app; this.lez = lezione; this.i = -1; this.b = null; this.chiuso = false;
+    this.app = app; this.lez = lezione; this.i = -1; this.b = null; this.chiuso = false; this.timer = null;
     var self = this;
-    this.coach = el('div', 'coach');
-    this.coach.innerHTML = '<div class="faro"></div><div class="dito"></div>' +
-      '<div class="fumetto"><div class="f-testa"><span class="f-num"></span><button class="f-esci" aria-label="Exit tutorial">Exit</button></div>' +
-      '<h3></h3><p></p><div class="f-piede"><div class="f-punti"></div><button class="btn oro f-avanti">Next</button></div></div>';
-    this.faro = this.coach.querySelector('.faro');
-    this.dito = this.coach.querySelector('.dito');
-    this.fum = this.coach.querySelector('.fumetto');
-    this.avanti = this.coach.querySelector('.f-avanti');
+    this.faro = el('div', 'tut-faro');
+    this.blocchi = [0, 1, 2, 3].map(function () {
+      var x = el('div', 'tut-blocco');
+      x.addEventListener('click', function () { self.richiama(); });
+      return x;
+    });
+    this.dito = el('div', 'tut-dito');
+    this.fum = el('div', 'tut-fum');
+    this.fum.innerHTML = '<div class="f-testa"><span class="f-num"></span><button class="f-esci">Exit</button></div>' +
+      '<h3></h3><p></p><div class="f-piede"><div class="f-punti"></div><span class="f-fai">Your move</span><button class="btn oro f-avanti">Next</button></div>';
+    this.avanti = this.fum.querySelector('.f-avanti');
     this.avanti.addEventListener('click', function () { if (!self.avanti.disabled) self.passo(self.i + 1); });
-    this.coach.querySelector('.f-esci').addEventListener('click', function () { self.esci(); });
+    this.fum.querySelector('.f-esci').addEventListener('click', function () { self.esci(); });
     this.suRidimensiona = function () { self.posiziona(); };
     window.addEventListener('resize', this.suRidimensiona);
   }
 
-  // il campo di gioco della lezione: mani e numeri decisi dal copione
+  // il campo della lezione: mani e numeri decisi dal copione
   Regia.prototype.campo = function (c) {
     var p = new Motore.Partita({ mazzi: [Motore.mazzoCasuale(new Motore.Caso(11)), Motore.mazzoCasuale(new Motore.Caso(12))],
       seme: 77, primo: 1, nascoste: false });
@@ -46,136 +68,173 @@
     metti(p.g[2], c.manoLui, c.lui, null);
     var self = this;
     this.b = new Battaglia(this.app, { partita: p, sfida: c.avversario || null, titolo: 'Tutorial', rivincita: null,
-      tutorial: {
-        mossa: function (b, r, id) { self.dopoProva(r, id); },
-        esci: function () { self.esci(); }
-      } });
+      tutorial: { mossa: function (b, r, id) { self.dopoMossa(r, id); }, esci: function () { self.esci(); } } });
     this.b.bloccato = true;
     this.b.aggiorna();
-    return this.b;
   };
 
   Regia.prototype.avvia = function () {
     if (this.lez.palco) this.lez.palco(this); else this.campo(this.lez.campo);
-    document.body.appendChild(this.coach);
+    var self = this;
+    [this.faro].concat(this.blocchi, [this.fum, this.dito]).forEach(function (x) { document.body.appendChild(x); });
+    // il velo scuro arriva in dissolvenza: niente lampo dello sfondo chiaro
+    requestAnimationFrame(function () { self.faro.classList.add('acceso'); });
     this.passo(0);
   };
 
+  // un passo: info (Next), azione del copione (fai: parte da sola, Next aspetta), o attesa di una mossa del giocatore
   Regia.prototype.passo = function (i) {
     var self = this, passi = this.lez.passi;
     if (this.chiuso) return;
+    clearInterval(this.timer);
     if (i >= passi.length) return this.fine();
+    // chiude cio' che il passo prima aveva aperto e che questo non usa
+    var s = passi[i], prima = passi[i - 1];
+    if (prima && prima.chiudiPoi) document.querySelectorAll(prima.chiudiPoi).forEach(function (x) { x.remove(); });
     this.i = i;
-    var s = passi[i];
-    this.coach.classList.toggle('prova', !!s.prova);
+    this.azione(false);
+    this.fum.classList.toggle('attesa', !!s.attesa);
     this.fum.querySelector('h3').textContent = s.t || '';
-    this.fum.querySelector('p').innerHTML = s.x || '';
+    this.fum.querySelector('p').innerHTML = typeof s.x === 'function' ? s.x(this) : (s.x || '');
     this.fum.querySelector('.f-num').textContent = this.lez.titolo + ' · ' + (i + 1) + '/' + passi.length;
     this.fum.querySelector('.f-punti').innerHTML = passi.map(function (x, k) { return '<i class="' + (k < i ? 'fatto' : k === i ? 'qui' : '') + '"></i>'; }).join('');
-    this.avanti.textContent = s.prova ? 'Skip' : i === passi.length - 1 ? 'Finish' : 'Next';
+    this.avanti.textContent = i === passi.length - 1 ? 'Finish' : 'Next';
     this.fum.classList.remove('entra'); void this.fum.offsetWidth; this.fum.classList.add('entra');
-    this.bersaglio = s.faro || null;
-    this.dito.classList.remove('tocca');
+    this.bersaglio = s.faro ? (typeof s.faro === 'function' ? s.faro.bind(null, this) : s.faro) : null;
+    this.dito.classList.remove('giro');
     if (this.b) {
-      this.b.bloccato = !s.prova;
-      // nel passo "prova" tocca a te, qualunque cosa abbia fatto la dimostrazione prima
-      if (s.prova && this.b.p.stato === 'in corso') { this.b.p.corrente = 1; this.b.aggiorna(); }
+      this.b.bloccato = !s.attesa;
+      if (s.attesa && this.b.p.stato === 'in corso' && this.b.p.corrente !== 1) { this.b.p.corrente = 1; this.b.aggiorna(); }
     }
+    if (s.prima) s.prima(this);
+    if (s.attesa) this.aspetta(s);
     this.posiziona();
     if (s.fai) {
-      // la parte "video": parte da sola dopo un attimo, e Next aspetta che finisca
       this.avanti.disabled = true;
-      attendi(650, function () {
+      attendi(500, function () {
         if (self.chiuso || self.i !== i) return;
-        s.fai(self, function () { if (self.i === i) { self.avanti.disabled = false; self.posiziona(); if (s.dopo) self.fum.querySelector('p').innerHTML += ' ' + s.dopo; self.posiziona(); } });
+        self.azione(true);
+        s.fai(self, function () {
+          if (self.i !== i) return;
+          self.azione(false);
+          if (s.dopo) self.fum.querySelector('p').innerHTML += ' ' + (typeof s.dopo === 'function' ? s.dopo(self) : s.dopo);
+          self.avanti.disabled = false;
+          self.posiziona();
+        });
       });
-    } else this.avanti.disabled = false;
+    } else this.avanti.disabled = !!s.attesa;
   };
 
-  function rettangolo(b) {
-    if (!b) return null;
-    var e = typeof b === 'function' ? b() : document.querySelector(b);
-    if (!e) return null;
-    if (e.getBoundingClientRect) { var r = e.getBoundingClientRect(); return r.width ? r : null; }
-    return e;
-  }
-
-  // riflettore sul bersaglio, fumetto dove non lo copre
-  Regia.prototype.posiziona = function () {
-    var r = rettangolo(this.bersaglio), W = innerWidth, H = innerHeight, m = 6;
-    if (r) {
-      this.faro.style.cssText = 'opacity:1;left:' + (r.left - m) + 'px;top:' + (r.top - m) + 'px;width:' + (r.width + 2 * m) + 'px;height:' + (r.height + 2 * m) + 'px';
-    } else this.faro.style.cssText = 'opacity:1;left:' + (W / 2) + 'px;top:' + (H / 2) + 'px;width:0;height:0';
-    var f = this.fum, fw = f.offsetWidth, fh = f.offsetHeight, pos = [];
-    pos.push([(W - fw) / 2, (H - fh) / 2]);              // al centro
-    pos.push([(W - fw) / 2, 8]);                         // in alto
-    pos.push([(W - fw) / 2, H - fh - 8]);                // in basso
-    pos.push([8, (H - fh) / 2]); pos.push([W - fw - 8, (H - fh) / 2]);
-    var scelta = pos[0];
-    if (r) {
-      for (var k = 0; k < pos.length; k++) {
-        var x = pos[k][0], y = pos[k][1];
-        var tocca = !(x + fw < r.left - m || x > r.right + m || y + fh < r.top - m || y > r.bottom + m);
-        if (!tocca) { scelta = pos[k]; break; }
-      }
+  // in attesa: il dito indica il bersaglio a ripetizione; il passo si chiude quando la condizione si avvera
+  Regia.prototype.aspetta = function (s) {
+    var self = this, a = s.attesa, i = this.i;
+    if (a.tipo === 'apri') {
+      var id = idDi(a.carta);
+      this.timer = setInterval(function () {
+        var c = document.querySelector('.lente .carta');
+        if (c && +c.dataset.id === id) { clearInterval(self.timer); attendi(250, function () { if (self.i === i) self.passo(i + 1); }); }
+      }, 120);
+    } else if (a.tipo === 'seg') {
+      this.timer = setInterval(function () {
+        if (document.querySelector('.spiega-seg')) { clearInterval(self.timer); attendi(200, function () { if (self.i === i) self.passo(i + 1); }); }
+      }, 120);
     }
-    f.style.left = Math.round(scelta[0]) + 'px'; f.style.top = Math.round(scelta[1]) + 'px';
+    // 'gioca': lo chiude dopoMossa
   };
 
-  // il dito: va sul bersaglio e "tocca", poi fn
-  Regia.prototype.tocca = function (bers, fn) {
-    var r = rettangolo(bers), d = this.dito, self = this;
-    if (!r) return fn();
-    d.style.left = (r.left + r.width / 2) + 'px'; d.style.top = (r.top + r.height / 2) + 'px';
-    d.classList.remove('tocca'); void d.offsetWidth; d.classList.add('tocca');
-    attendi(700, function () { if (!self.chiuso) fn(); });
-  };
-
-  function posizione(b, chi, nome) {
-    var g = b.p.g[chi], id = idDi(nome);
-    for (var i = 1; i <= 8; i++) if (+g.Hand.get(i) === id) return i;
-    return 0;
-  }
-  // una mossa del copione: il dito tocca la carta (se e' mia), poi la carta entra e il motore la esegue
-  Regia.prototype.gioca = function (chi, nome, fn, azione, modo) {
-    var self = this, b = this.b, pos = posizione(b, chi, nome), id = b.p.g[chi].Hand.get(pos);
-    azione = azione || 'play';
-    var esegui = function () {
-      UI.chiudiLente();
-      b.mostraEntrata(id, chi === 1 ? (azione === 'play' ? 'You play' : 'You discard') : 'Opponent plays', 1000, function () {
-        if (self.chiuso) return;
-        b.p.corrente = chi;
-        var r = b.p.usaCarta(chi, azione, pos, modo || 0);
-        b.aggiorna();
-        b.scatti(r.segnalini, id, chi, function () { attendi(350, fn); });
-      });
-    };
-    if (chi === 1) this.tocca('.mano .carta[data-pos="' + pos + '"]', esegui); else esegui();
-  };
-  // aggiunge una frase al fumetto (i numeri veri di cio' che e' appena successo)
-  Regia.prototype.dici = function (html) { this.fum.querySelector('p').innerHTML += ' <b>' + html + '</b>'; this.posiziona(); };
-  // gioca e poi racconta muro e torre del bersaglio, prima e dopo
-  Regia.prototype.giocaEConta = function (chi, nome, ok) {
-    var self = this, o = chi === 1 ? 2 : 1, g = this.b.p.g[o], m0 = g.Wall, t0 = g.Tower;
-    this.gioca(chi, nome, function () {
-      var dm = m0 - g.Wall, dt = t0 - g.Tower, chiS = o === 2 ? 'Enemy' : 'Your';
-      self.dici(chiS + ' wall ' + (dm ? '−' + dm : 'untouched') + ', tower ' + (dt ? '−' + dt : 'untouched') + '.');
-      ok();
-    });
-  };
-  // apre la carta grande come farebbe un tocco
-  Regia.prototype.apri = function (nome, fn) {
-    var self = this, pos = posizione(this.b, 1, nome);
-    this.tocca('.mano .carta[data-pos="' + pos + '"]', function () { self.b.apri(pos); attendi(450, fn); });
-  };
-  // da' la mano al giocatore per un passo "prova"
-  Regia.prototype.dopoProva = function (r, id) {
-    var self = this, b = this.b;
+  // la mossa del giocatore e' fatta (Battaglia ha gia' mostrato la carta ed eseguito il motore)
+  Regia.prototype.dopoMossa = function (r, id) {
+    var self = this, b = this.b, s = this.lez.passi[this.i];
+    b.bloccato = true;
+    this.azione(true);
     b.aggiorna();
     b.scatti(r.segnalini, id, 1, function () {
-      var s = self.lez.passi[self.i];
-      if (s && s.prova) self.passo(self.i + 1);
+      if (s && s.attesa && s.attesa.tipo === 'gioca') attendi(300, function () { self.passo(self.i + 1); });
     });
+  };
+
+  // durante una mossa: velo leggero e fumetto ridotto, cosi' si vede cosa succede
+  Regia.prototype.azione = function (si) {
+    this.inAzione = si;
+    this.faro.classList.toggle('leggero', si);
+    this.fum.classList.toggle('mini', si);
+    if (si) this.dito.classList.remove('giro');
+    this.posiziona();
+  };
+
+  // tocco fuori dal bersaglio: il dito ricorda dove toccare, o Next si fa notare
+  Regia.prototype.richiama = function () {
+    var s = this.lez.passi[this.i];
+    if (this.inAzione) return;
+    if (s && s.attesa) this.mostraDito();
+    else { this.avanti.classList.remove('scuoti'); void this.avanti.offsetWidth; this.avanti.classList.add('scuoti'); }
+  };
+  Regia.prototype.mostraDito = function () {
+    var r = rettangolo(this.bersaglio), d = this.dito;
+    if (!r) return;
+    d.style.left = (r.left + r.width / 2) + 'px'; d.style.top = (r.top + r.height / 2) + 'px';
+    d.classList.remove('giro'); void d.offsetWidth; d.classList.add('giro');
+  };
+
+  // riflettore e blocchi attorno al bersaglio; fumetto nel posto che copre meno
+  Regia.prototype.posiziona = function () {
+    if (this.chiuso) return;
+    var r = rettangolo(this.bersaglio), W = innerWidth, H = innerHeight, m = 5, s = this.lez.passi[this.i] || {};
+    var buco = r ? { left: r.left - m, top: r.top - m, right: r.right + m, bottom: r.bottom + m } : null;
+    if (buco) this.faro.style.cssText = 'left:' + buco.left + 'px;top:' + buco.top + 'px;width:' + (buco.right - buco.left) + 'px;height:' + (buco.bottom - buco.top) + 'px';
+    else this.faro.style.cssText = 'left:' + (W / 2) + 'px;top:' + (H / 2) + 'px;width:0;height:0';
+    // i blocchi lasciano libero solo il buco, e solo nei passi in cui si deve toccare
+    var rett;
+    if (s.attesa && buco && !this.inAzione) {
+      rett = [[0, 0, W, buco.top], [0, buco.bottom, W, H - buco.bottom], [0, buco.top, buco.left, buco.bottom - buco.top],
+        [buco.right, buco.top, W - buco.right, buco.bottom - buco.top]];
+    } else rett = [[0, 0, W, H], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+    this.blocchi.forEach(function (x, k) { var q = rett[k]; x.style.cssText = 'left:' + q[0] + 'px;top:' + q[1] + 'px;width:' + Math.max(0, q[2]) + 'px;height:' + Math.max(0, q[3]) + 'px'; });
+    if (s.attesa && !this.inAzione) this.mostraDito();
+    // fumetto: fra angoli e bordi, quello che copre meno il bersaglio e quello che sta succedendo
+    var f = this.fum, fw = f.offsetWidth, fh = f.offsetHeight, g = 8;
+    var evita = [];
+    if (buco) evita.push([buco, 4]);
+    ['.lente', '.spiega-seg', '.entrata', '.scatto-seg .riq'].forEach(function (q) { var x = rettangolo(q); if (x) evita.push([x, 3]); });
+    if (s.zona) s.zona.forEach(function (q) { var x = rettangolo(q); if (x) evita.push([x, 1]); });
+    var pos = [[g, g], [W - fw - g, g], [(W - fw) / 2, g], [g, H - fh - g], [W - fw - g, H - fh - g], [(W - fw) / 2, H - fh - g],
+      [g, (H - fh) / 2], [W - fw - g, (H - fh) / 2], [(W - fw) / 2, (H - fh) / 2]];
+    var meglio = pos[0], costo = Infinity;
+    pos.forEach(function (p, k) {
+      var box = { left: p[0], top: p[1], right: p[0] + fw, bottom: p[1] + fh }, c = k * 0.5;   // a parita', l'ordine della lista
+      evita.forEach(function (e) { c += sovrapp(box, e[0]) * e[1]; });
+      if (c < costo) { costo = c; meglio = p; }
+    });
+    f.style.left = Math.round(meglio[0]) + 'px'; f.style.top = Math.round(meglio[1]) + 'px';
+  };
+
+  // una mossa del copione (avversario, o salti in avanti): la carta entra e il motore la esegue
+  Regia.prototype.gioca = function (chi, nome, fn, azione) {
+    var self = this, b = this.b, pos = posizione(b, chi, nome), id = b.p.g[chi].Hand.get(pos);
+    azione = azione || 'play';
+    UI.chiudiLente();
+    b.mostraEntrata(id, chi === 1 ? (azione === 'play' ? 'You play' : 'You discard') : 'Opponent plays', 1100, function () {
+      if (self.chiuso) return;
+      b.p.corrente = chi;
+      var r = b.p.usaCarta(chi, azione, pos, 0);
+      b.aggiorna();
+      b.scatti(r.segnalini, id, chi, function () { attendi(350, fn); });
+    });
+  };
+  // fotografa i numeri prima di una mossa, per raccontarli dopo
+  Regia.prototype.foto = function () {
+    var g1 = this.b.p.g[1], g2 = this.b.p.g[2], f = {};
+    ['Tower', 'Wall', 'Bricks', 'Gems', 'Recruits', 'Quarry'].forEach(function (k) { f['io' + k] = g1[k]; f['lui' + k] = g2[k]; });
+    f.seg = +g1.TokenValues.get(1);
+    this.istantanea = f;
+  };
+  Regia.prototype.danno = function (chi) {
+    var f = this.istantanea, g = this.b.p.g[chi], k = chi === 1 ? 'io' : 'lui';
+    var dm = f[k + 'Wall'] - g.Wall, dt = f[k + 'Tower'] - g.Tower;
+    var parti = [];
+    if (dm > 0) parti.push('wall −' + dm);
+    if (dt > 0) parti.push('tower −' + dt);
+    return parti.length ? parti.join(', ') : 'no damage';
   };
 
   Regia.prototype.fine = function () {
@@ -183,14 +242,14 @@
     pr.d.tutorial = pr.d.tutorial || {};
     pr.d.tutorial[this.lez.id] = true; pr.salva();
     var k = LEZIONI.indexOf(this.lez), dopo = LEZIONI[k + 1];
-    this.coach.classList.remove('prova');
     this.bersaglio = null;
+    this.fum.classList.remove('attesa', 'mini');
     this.fum.querySelector('h3').textContent = 'Lesson complete';
-    this.fum.querySelector('p').innerHTML = '“' + this.lez.titolo + '” done.' + (dopo ? ' Next up: <b>' + dopo.titolo + '</b>.' : ' You know the basics: go and play!');
+    this.fum.querySelector('p').innerHTML = '“' + this.lez.titolo + '” done.' + (dopo ? ' Next lesson: <b>' + dopo.titolo + '</b>.' : ' That is everything: time to play!');
     this.fum.querySelector('.f-punti').innerHTML = '';
     var piede = this.fum.querySelector('.f-piede');
     piede.innerHTML = '';
-    var lista = el('button', 'btn', 'Lessons'), avanti = el('button', 'btn oro', dopo ? 'Next lesson' : 'Play');
+    var lista = el('button', 'btn', 'All lessons'), avanti = el('button', 'btn oro', dopo ? 'Next lesson' : 'Play');
     lista.addEventListener('click', function () { self.chiudi(); Tutorial.menu(self.app); });
     avanti.addEventListener('click', function () { self.chiudi(); if (dopo) Tutorial.avvia(self.app, dopo.id); else self.app.preparazione(); });
     piede.appendChild(lista); piede.appendChild(avanti);
@@ -198,98 +257,124 @@
   };
   Regia.prototype.chiudi = function () {
     this.chiuso = true;
+    clearInterval(this.timer);
     window.removeEventListener('resize', this.suRidimensiona);
-    this.coach.remove();
-    document.querySelectorAll('.entrata, .scatto-seg, .velo-seg, .tut-palco-x').forEach(function (x) { x.remove(); });
+    [this.faro, this.fum, this.dito].concat(this.blocchi).forEach(function (x) { x.remove(); });
+    document.querySelectorAll('.entrata, .scatto-seg, .velo-seg').forEach(function (x) { x.remove(); });
     UI.chiudiLente();
     if (this.b) this.b.chiuso = true;
   };
   Regia.prototype.esci = function () { this.chiudi(); Tutorial.menu(this.app); };
 
+  // ------------------------------------------------------------------ passi riusabili
+  // tocca una carta della mano (si apre in grande)
+  function tocca(nome, t, x) {
+    return { t: t, x: x, faro: function (T) { return document.querySelector(selCarta(T.b, nome)); }, attesa: { tipo: 'apri', carta: nome } };
+  }
+  // premi Play (o Discard) nella carta aperta
+  function premi(azione, t, x) {
+    return { t: t, x: x, faro: azione === 'discard' ? '.lente .azioni .btn:not(.oro)' : '.lente .azioni .btn.oro',
+      attesa: { tipo: 'gioca' }, prima: function (T) { T.foto(); }, zona: ['.rocca.io', '.rocca.lui'] };
+  }
+
   // ------------------------------------------------------------------ le lezioni
   var MANO_BASE = ['Scout tower', 'Fortified wall', 'Knight', 'Archer', 'Sculptor', 'Chapel', 'Poison frog', 'Catapult'];
   var LEZIONI = [
-    { id: 'scopo', titolo: 'The goal', sotto: 'Three ways to win a game.',
+    { id: 'scopo', titolo: 'The goal', sotto: 'The three ways to win a game.',
       campo: { mano: MANO_BASE, manoLui: MANO_BASE, io: { Bricks: 15, Gems: 15, Recruits: 15 }, lui: { Tower: 3, Wall: 0 } },
       passi: [
-        { t: 'Two castles', x: 'Each side has a <b>tower</b> and a <b>wall</b> in front of it. You are on the left, the opponent on the right.', faro: '.rocca.io' },
+        { t: 'Two castles', x: 'You are on the left, your opponent on the right. Each castle has a <b>tower</b> and, in front of it, a <b>wall</b>.', faro: '.rocca.io' },
         { t: 'Build up', x: 'If your tower reaches <b>100</b>, you win.', faro: '.rocca.io .torre .targa' },
-        { t: 'Or knock down', x: 'If the enemy tower falls to <b>0</b>, you win too. This one is almost gone: 3 left, and no wall.', faro: '.rocca.lui' },
-        { t: 'Watch', x: 'The <b>Archer</b> hits the enemy tower for 3.', faro: '.rocca.lui',
-          fai: function (T, ok) { T.gioca(1, 'Archer', ok); }, dopo: '<b>The tower is down: that is a win.</b>' },
-        { t: 'Or get rich', x: 'The third way: gather <b>400 resources</b> in total (bricks + gems + recruits). It happens rarely, but it happens.', faro: '.ris-io' }
+        { t: 'Knock down', x: 'If the enemy tower drops to <b>0</b>, you also win. This one has only 3 left, and no wall to protect it.', faro: '.rocca.lui' },
+        tocca('Archer', 'Tap the Archer', 'The <b>Archer</b> hits the enemy tower for 3. Tap it to see it up close.'),
+        premi('play', 'Play it', 'Press <b>Play</b>.'),
+        { t: 'You win!', x: 'The enemy tower has fallen: that is a victory.', faro: '.rocca.lui' },
+        { t: 'Or get rich', x: 'The third way to win: collect <b>400</b> resources in total (bricks + gems + recruits). It is rare, but it happens.', faro: '.ris-io' }
       ] },
-    { id: 'risorse', titolo: 'Resources', sotto: 'Bricks, gems, recruits and the buildings that make them.',
+    { id: 'risorse', titolo: 'Resources', sotto: 'Bricks, gems, recruits, and the buildings that produce them.',
       campo: { mano: MANO_BASE, manoLui: MANO_BASE, io: { Bricks: 12, Gems: 10, Recruits: 9 } },
       passi: [
-        { t: 'Three resources', x: '<b>Bricks</b> (red), <b>gems</b> (blue) and <b>recruits</b> (green). Cards cost these.', faro: '.ris-io' },
-        { t: 'Production', x: 'Under each number is its building: <b>Mine</b>, <b>Altar</b>, <b>Lair</b>. Level 3 means +3 of that resource every turn.', faro: '.ris-io .ris.b' },
-        { t: 'Card costs', x: 'The coloured gems on a card are its cost: red = bricks, blue = gems, green = recruits.', faro: '.mano .carta[data-pos="5"] .costi' },
-        { t: 'Grow your economy', x: '<b>Sculptor</b> raises your Mine by one, for the rest of the game.', faro: '.ris-io .ris.b',
-          fai: function (T, ok) { T.gioca(1, 'Sculptor', ok); }, dopo: 'Mine 4: from now on +4 bricks per turn.' },
-        { t: 'End of turn', x: 'After your card you collect production: the small green numbers show what came in this turn.', faro: '.ris-io' }
+        { t: 'Three resources', x: 'You have three resources: <b>bricks</b> (red), <b>gems</b> (blue) and <b>recruits</b> (green). Cards cost resources.', faro: '.ris-io' },
+        { t: 'Buildings', x: 'Under each resource is the building that produces it: <b>Mine</b>, <b>Altar</b>, <b>Lair</b>. “Mine 3” means you get 3 bricks every turn.', faro: '.ris-io .ris.b' },
+        { t: 'What a card costs', x: 'The coloured circles in the top left corner of a card show its cost: a red circle is bricks, blue is gems, green is recruits. The <b>Sculptor</b> costs 9 bricks.',
+          faro: function (T) { return document.querySelector(selCarta(T.b, 'Sculptor') + ' .costi'); } },
+        tocca('Sculptor', 'Tap the Sculptor', 'The Sculptor upgrades your Mine. Tap it.'),
+        premi('play', 'Play it', 'Press <b>Play</b>.'),
+        { t: 'A better Mine', faro: '.ris-io .ris.b',
+          x: function (T) { return 'Your Mine went from ' + T.istantanea.ioQuarry + ' to <b>' + T.b.p.g[1].Quarry + '</b>, for the rest of the game. At the end of your turn you also collected its production: the green number next to your bricks.'; } }
       ] },
-    { id: 'carte', titolo: 'Playing cards', sotto: 'Your hand, playing, discarding.',
+    { id: 'carte', titolo: 'Playing cards', sotto: 'Your hand: playing and discarding.',
       campo: { mano: ['Scout tower', 'Fortified wall', 'Catapult', 'Archer', 'Sculptor', 'Chapel', 'Poison frog', 'Knight'], manoLui: MANO_BASE,
         io: { Bricks: 9, Gems: 4, Recruits: 6 } },
       passi: [
-        { t: 'Your hand', x: 'Eight cards. Every turn you <b>play one</b> or <b>discard one</b>, then you draw a new one.', faro: '.mano' },
-        { t: 'Can’t afford it', x: 'A <b>dashed border</b> means you don’t have the resources yet. The gem you’re missing has a red ring.', faro: '.mano .carta[data-pos="3"]' },
-        { t: 'Look before you play', x: 'Tapping a card shows it big. Behind it, the numbers next to the castles preview what it will do.',
-          faro: '.lente', fai: function (T, ok) { T.apri('Fortified wall', ok); } },
-        { t: 'Play it', x: 'Play: the wall grows by 8.', faro: '.rocca.io .muro',
-          fai: function (T, ok) { T.gioca(1, 'Fortified wall', ok); }, dopo: 'A new card has been drawn in its place.' },
-        { t: 'Your turn', x: 'Try it: tap a card you can afford and press <b>Play</b> (or <b>Discard</b>).', faro: '.mano', prova: true }
+        { t: 'Your hand', x: 'You hold eight cards. Each turn you <b>play</b> one card or <b>discard</b> one, and then you draw a new card.', faro: '.mano' },
+        { t: 'Too expensive', x: 'A <b>dashed border</b> means you can’t afford the card yet. The cost you are missing has a red ring: the Catapult needs 16 recruits, and you have 6.',
+          faro: function (T) { return document.querySelector(selCarta(T.b, 'Catapult')); } },
+        tocca('Fortified wall', 'Tap the Fortified wall', 'Tap it to see it up close.'),
+        { t: 'Preview', x: 'While a card is selected, small numbers next to the castles show what it will do. Here: your wall +8.', faro: '.rocca.io .muro .targa', zona: ['.lente'] },
+        premi('play', 'Play it', 'Press <b>Play</b>.'),
+        { t: 'Done', x: function (T) { return 'Your wall went from ' + T.istantanea.ioWall + ' to <b>' + T.b.p.g[1].Wall + '</b>, and a new card took its place in your hand.'; }, faro: '.rocca.io .muro' },
+        tocca('Catapult', 'Discarding', 'When no card helps, you can throw one away. Tap the <b>Catapult</b>.'),
+        premi('discard', 'Discard it', 'Press <b>Discard</b>.'),
+        { t: 'Discarded', x: 'The Catapult is gone and you drew another card. Discarding uses up your turn, just like playing.', faro: '.mano' }
       ] },
     { id: 'attacco', titolo: 'Attacks', sotto: 'Damage hits the wall first, then the tower.',
       campo: { mano: MANO_BASE, manoLui: ['Orc grunt', 'Knight', 'Archer', 'Gate', 'Scout tower', 'Catapult', 'Chapel', 'Sculptor'],
         io: { Bricks: 15, Gems: 15, Recruits: 20 }, lui: { Wall: 5, Recruits: 20 } },
       passi: [
-        { t: 'The wall protects', x: 'An attack hits the <b>wall</b> first. Only what is left over reaches the tower.', faro: '.rocca.lui' },
-        { t: 'Watch', x: 'The <b>Knight</b> attacks. The enemy wall is only 5.', faro: '.rocca.lui',
-          fai: function (T, ok) { T.giocaEConta(1, 'Knight', ok); } },
-        { t: 'Straight to the tower', x: 'Cards that say <b>Enemy tower</b> ignore the wall. The <b>Archer</b> hits the tower directly.', faro: '.rocca.lui .torre',
-          fai: function (T, ok) { T.giocaEConta(1, 'Archer', ok); } },
-        { t: 'They attack too', x: 'Now the opponent plays an <b>Orc grunt</b>.', faro: '.rocca.io',
-          fai: function (T, ok) { T.giocaEConta(2, 'Orc grunt', function () { T.dici('Keep your wall high!'); ok(); }); } }
+        { t: 'The wall protects', x: 'Most attacks hit the <b>wall</b> first. Only the damage the wall can’t absorb reaches the tower. The enemy wall is 5.', faro: '.rocca.lui' },
+        tocca('Knight', 'Tap the Knight', 'The <b>Knight</b> is an attack card. Tap it.'),
+        premi('play', 'Play it', 'Press <b>Play</b>.'),
+        { t: 'Wall first', faro: '.rocca.lui', x: function (T) { return 'Enemy: <b>' + T.danno(2) + '</b>. The wall took what it could; the rest went to the tower.'; } },
+        tocca('Archer', 'Straight to the tower', 'Cards that say <b>Enemy tower</b> skip the wall. Tap the <b>Archer</b>.'),
+        premi('play', 'Play it', 'Press <b>Play</b>.'),
+        { t: 'Direct hit', faro: '.rocca.lui .torre', x: function (T) { return 'Enemy: <b>' + T.danno(2) + '</b>. The wall wasn’t touched.'; } },
+        { t: 'Their turn', x: 'Now the opponent attacks you with an <b>Orc grunt</b>.', faro: '.rocca.io', zona: ['.rocca.lui'],
+          fai: function (T, ok) { T.foto(); T.gioca(2, 'Orc grunt', ok); },
+          dopo: function (T) { return 'You: <b>' + T.danno(1) + '</b>. A high wall keeps your tower safe.'; } }
       ] },
-    { id: 'keyword', titolo: 'Keywords', sotto: 'Icons on cards and the “play again” cards.',
+    { id: 'keyword', titolo: 'Keywords', sotto: 'Card icons, and cards that let you play again.',
       campo: { mano: MANO_BASE, manoLui: MANO_BASE, io: { Bricks: 15, Gems: 15, Recruits: 15 } },
       passi: [
-        { t: 'Keywords', x: 'The small icons at the bottom right of the art are <b>keywords</b>: families of cards with an extra rule.', faro: '.mano .carta[data-pos="7"] .kw' },
-        { t: 'Read them', x: 'Tap the card: every keyword is explained next to it.', faro: '.lente .kwlista',
-          fai: function (T, ok) { T.apri('Poison frog', ok); } },
-        { t: 'Play again', x: '<b>Quick</b> and <b>Swift</b> cards let you play another card in the same turn.', faro: '.ris-lui',
-          fai: function (T, ok) { T.gioca(1, 'Poison frog', ok); }, dopo: '“Play again!”: it is still your turn.' },
-        { t: 'Families', x: 'Many keywords reward you for playing cards of the same family: building a deck around one is a good plan.', faro: '.mano' }
+        { t: 'Keywords', x: 'The small icons in the bottom right corner of a picture are <b>keywords</b>: each one adds a rule to the card.',
+          faro: function (T) { return document.querySelector(selCarta(T.b, 'Poison frog') + ' .kw'); } },
+        tocca('Poison frog', 'Tap the Poison frog', 'Tap it to read its keywords.'),
+        { t: 'Read them', x: 'Every keyword is explained next to the card. <b>Quick</b> means: after this card, you play again.', faro: '.lente .kwlista' },
+        premi('play', 'Play it', 'Press <b>Play</b>.'),
+        { t: 'Still your turn', x: 'Thanks to <b>Quick</b> it is still your turn: you can play another card straight away.', faro: '.giro' },
+        { t: 'Card families', x: 'Many keywords get stronger when you hold other cards of the same family. Building a deck around one keyword is a good plan.', faro: '.mano' }
       ] },
     { id: 'token', titolo: 'Keyword token', sotto: 'The ring that fills up to 100.',
       campo: { mano: ['Chapel', 'Scout tower', 'Fortified wall', 'Knight', 'Archer', 'Sculptor', 'Poison frog', 'Catapult'], manoLui: MANO_BASE,
-        io: { Bricks: 20, Gems: 15, Recruits: 15 }, segnalino: ['Holy', 40] },
+        io: { Bricks: 25, Gems: 15, Recruits: 15 }, segnalino: ['Holy', 40] },
       passi: [
-        { t: 'Your token', x: 'Every deck has one <b>keyword token</b>: this ring. Yours is <b>Holy</b>, now at 40.', faro: '.ris-io .seg' },
-        { t: 'It fills up', x: 'Playing a <b>Holy</b> card fills it (more if you hold other Holy cards). <b>Chapel</b> is Holy.', faro: '.ris-io .seg',
-          fai: function (T, ok) { T.gioca(1, 'Chapel', ok); } },
-        { t: 'At 100 it fires', x: 'Let’s jump ahead: the ring is almost full.', faro: '.ris-io .seg',
+        { t: 'Your token', x: 'Every deck has one <b>keyword token</b>: this ring. Yours is the <b>Holy</b> token, and it is at 40.', faro: '.ris-io .seg' },
+        { t: 'Tap the ring', x: 'Tap the ring to read about it.', faro: '.ris-io .seg', attesa: { tipo: 'seg' } },
+        { t: 'How it works', x: 'The panel shows how full the ring is, how it grows, and what happens at 100.', faro: '.spiega-seg', chiudiPoi: '.velo-seg' },
+        tocca('Chapel', 'Fill it', 'Playing a <b>Holy</b> card fills the ring. The <b>Chapel</b> is Holy: tap it.'),
+        premi('play', 'Play it', 'Press <b>Play</b>.'),
+        { t: 'It grew', x: function (T) { return 'The ring went from ' + T.istantanea.seg + ' to <b>' + T.b.p.g[1].TokenValues.get(1) + '</b>.'; }, faro: '.ris-io .seg' },
+        { t: 'Almost full', x: 'Let’s skip ahead: the ring is at 90, and you have another Chapel.', faro: '.ris-io .seg',
           fai: function (T, ok) {
             var b = T.b, g = b.p.g[1]; g.TokenValues.set(1, 90); b.p.corrente = 1;
-            var pos = 0; for (var i = 1; i <= 8; i++) if (+g.Hand.get(i) !== idDi('Chapel')) { pos = i; break; }
-            g.Hand.set(pos, idDi('Chapel')); g.Bricks = 20; b.aggiorna();
-            attendi(600, function () { T.gioca(1, 'Chapel', ok); });
-          }, dopo: 'Each token has its own effect, and starts again from 0.' },
-        { t: 'Read it any time', x: 'Tap the ring during a game to see how full it is and what it does. In the deck editor you choose which token your deck uses.', faro: '.ris-io .seg' }
+            for (var i = 1; i <= 8; i++) if (+g.Hand.get(i) !== idDi('Chapel')) { g.Hand.set(i, idDi('Chapel')); break; }
+            g.Bricks = 25; b.aggiorna(); attendi(400, ok);
+          } },
+        tocca('Chapel', 'Tap the Chapel', 'Tap it: the card warns you that the ring will reach 100.'),
+        premi('play', 'Play it', 'Press <b>Play</b> and watch the ring.'),
+        { t: 'It fired!', x: 'At 100 the token fires its effect, then starts again from 0. Each keyword token does something different, and in the deck editor you choose which one your deck uses.', faro: '.ris-io .seg' }
       ] },
     { id: 'mazzi', titolo: 'Decks and boosters', sotto: 'Your collection, the shop, the opponents.',
       palco: function (T) { palcoMazzi(T); },
       passi: [
-        { t: 'A deck', x: 'A deck is <b>15 common</b>, <b>15 uncommon</b> and <b>15 rare</b> cards: 45 in all.', faro: '.tp-colonne',
+        { t: 'A deck', x: 'A deck has <b>15 common</b>, <b>15 uncommon</b> and <b>15 rare</b> cards: 45 in all. You build it in <b>Decks</b> from the cards you own.', faro: '.tp-colonne',
           fai: function (T, ok) { T.anima('mazzo', ok); } },
-        { t: 'Win, earn', x: 'Winning gives you <b>coins</b> and lets you open one of three <b>boosters</b>.', faro: '.tp-booster',
+        { t: 'Win and earn', x: 'Each win gives you <b>coins</b>, and you choose one of three <b>boosters</b> to open.', faro: '.tp-booster',
           fai: function (T, ok) { T.anima('booster', ok); } },
-        { t: 'Each booster', x: 'A booster gives 3 cards of its kind. The number on it says how many of that kind you already own.', faro: '.tp-booster .booster' },
-        { t: 'Duplicates', x: 'A card you already have is <b>sold automatically</b>: you get coins instead.', faro: '.tp-doppia',
+        { t: 'Boosters', x: 'A booster gives 3 cards of its kind. The number on the pack shows how many cards of that kind you already own, out of the total.', faro: '.tp-booster .booster' },
+        { t: 'Duplicates', x: 'If you get a card you already own, it is <b>sold automatically</b> and you receive coins instead.', faro: '.tp-doppia',
           fai: function (T, ok) { T.anima('doppia', ok); } },
-        { t: 'Opponents', x: '<b>Basic</b> opponents are always open. <b>Medium</b> and <b>Advanced</b> ones are unlocked in the shop, and pay more.', faro: '.tp-avv',
+        { t: 'Opponents', x: '<b>Basic</b> opponents are always available. <b>Medium</b> and <b>Advanced</b> ones are unlocked in the <b>Shop</b>, and pay more coins when you beat them.', faro: '.tp-avv',
           fai: function (T, ok) { T.anima('avversari', ok); } }
       ] }
   ];
@@ -300,7 +385,6 @@
     s.innerHTML = '<div class="tp-colonne"><div class="tp-col" data-r="C"><b>Common</b><div></div></div><div class="tp-col" data-r="U"><b>Uncommon</b><div></div></div>' +
       '<div class="tp-col" data-r="R"><b>Rare</b><div></div></div></div><div class="tp-lato"><div class="tp-booster"></div><div class="tp-doppia"></div><div class="tp-avv"></div></div>';
     T.app.monta(s);
-    T.palco = s;
     T.anima = function (cosa, ok) {
       var L = Motore.catalogo.lista;
       if (cosa === 'mazzo') {
@@ -320,13 +404,14 @@
       } else if (cosa === 'doppia') {
         var dd = s.querySelector('.tp-doppia'), c = UI.carta(L[3].id, { mini: true });
         dd.innerHTML = ''; dd.appendChild(c);
-        var m = el('div', 'tp-moneta', UI.moneta(4)); dd.appendChild(m);
+        var m = el('div', 'tp-moneta', '+ ' + UI.moneta(4)); dd.appendChild(m);
         attendi(300, function () { c.classList.add('tp-vende'); m.classList.add('su'); });
         attendi(1500, ok);
       } else if (cosa === 'avversari') {
         var a = s.querySelector('.tp-avv'); a.innerHTML = '';
-        [['Basic', 'giullare'], ['Medium', 'gruk'], ['Advanced', null]].forEach(function (x, j) {
-          var av = x[1] ? Avversari.tutti().filter(function (v) { return v.avatar === x[1]; })[0] : Avversari.tutti().filter(function (v) { return v.tipo === 'sfidante'; })[0];
+        var tutti = Avversari.tutti();
+        [['Basic', 'base'], ['Medium', 'rivale'], ['Advanced', 'sfidante']].forEach(function (x, j) {
+          var av = tutti.filter(function (v) { return v.tipo === x[1]; })[0];
           var t = el('div', 'tp-avv-c', '<img src="' + T.app.avatar(av ? av.nome : null) + '" alt=""><b>' + x[0] + '</b>');
           t.style.animationDelay = (j * 0.2) + 's'; a.appendChild(t);
         });
