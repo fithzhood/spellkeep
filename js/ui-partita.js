@@ -19,6 +19,7 @@
     this.sel = 0; this.modo = 0; this.selLui = 0;
     this.bloccato = false; this.manoVista = null;
     this.costruisci();
+    if (window.Musica) Musica.scena(opz.sfida ? 'sfida' : 'partita');
     this.aggiorna();
     if (this.p.stato !== 'in corso') this.finale();
     else if (this.p.corrente === 2) this.turnoCpu();
@@ -303,11 +304,18 @@
     this.bloccato = true;
     var self = this, p = this.p, v = p.vincitore;
     var esito = v === 1 ? 1 : v === 2 ? 2 : 0;
+    if (window.Musica) Musica.congedo(esito === 1 ? 'vittoria' : esito === 2 ? (this.opz.sfida ? 'sconfitta-sfida' : 'sconfitta') : null);
     var premio = this.app.profilo.registraPartita(esito, { sfida: this.opz.sfida, lunga: p.lunga });
     var f = el('div', 'finale'), r = el('div', 'riquadro pannello');
     var testo = p.esito === 'Surrender' ? 'You surrendered.' : (ESITI[p.esito] || ESITI.Draw)[esito === 2 ? 1 : 0];
     r.innerHTML = '<h2 class="' + (esito === 1 ? 'vinta' : esito === 2 ? 'persa' : '') + '">' + (esito === 1 ? 'Victory' : esito === 2 ? 'Defeat' : 'Draw') + '</h2>' +
       '<p>' + testo + ' · ' + p.round + (p.round === 1 ? ' round' : ' rounds') + '</p><div class="premio">+ ' + UI.moneta(premio) + '</div>';
+    // vittoria: tre booster, se ne apre uno. Chi esce senza sceglierlo lo ritrova nella home.
+    if (esito === 1 && this.app.profilo.d.premio) {
+      var sc = el('div', 'scelta-premio', '<div class="scelta-t">Choose a booster</div>');
+      UIBooster.sceltaPremio(sc, this.app, function () { sc.remove(); });
+      r.appendChild(sc);
+    }
     var az = el('div', 'azioni');
     var neg = el('button', 'btn oro', 'Shop'), riv = el('button', 'btn', 'Rematch'), casa = el('button', 'btn', 'Home');
     neg.addEventListener('click', function () { f.remove(); self.chiuso = true; self.app.negozio(); });

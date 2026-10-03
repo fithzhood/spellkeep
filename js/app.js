@@ -22,6 +22,7 @@
       if (this.battaglia && this.battaglia.s !== schermo) { this.battaglia.chiuso = true; this.battaglia = null; }
       this.radice.innerHTML = '';
       this.radice.appendChild(schermo);
+      if (window.Musica && !schermo.classList.contains('gioco')) Musica.scena(schermo.classList.contains('schermo-negozio') ? 'negozio' : 'menu');
     },
     cassa: function () { return '<div class="cassa pannello">' + UI.moneta(this.profilo.d.monete) + '</div>'; },
 
@@ -36,6 +37,7 @@
       var nav = s.querySelector('nav');
       function voce(testo, oro, fn) { var b = el('button', 'btn' + (oro ? ' oro' : ''), testo); b.addEventListener('click', fn); nav.appendChild(b); }
       if (d.partita) voce('Continue game', true, function () { self.riprendi(); });
+      else if (d.premio) voce('Open reward', true, function () { UIBooster.finestraPremio(self, function () { self.home(); }); });
       voce('Play', !d.partita, function () { self.preparazione(); });
       voce('Decks', false, function () { new Editor(self, d.mazzoAttivo); });
       voce('Shop', false, function () { self.negozio(); });
@@ -132,10 +134,10 @@
 
     // ---------------------------------------------------------------- negozio
     negozio: function () {
-      var self = this, pr = this.profilo, d = pr.d, n = d.negozio, s = el('div', 'schermo');
+      var self = this, pr = this.profilo, d = pr.d, n = d.negozio, s = el('div', 'schermo schermo-negozio');
       if (!n) { pr.rinnovaNegozio(); pr.salva(); n = d.negozio; }
       s.innerHTML = '<div class="testa"><button class="btn indietro">Home</button><h2>Shop</h2>' + this.cassa() + '<button class="btn oro gioca">Play</button></div>' +
-        '<div class="corpo"><div class="negozio"><div class="vetrina"></div><div class="banco"></div></div></div>';
+        '<div class="corpo"><div class="negozio"><div class="vetrina-col"><div class="vetrina"></div><div class="vetrina-booster"></div></div><div class="banco"></div></div></div>';
       this.monta(s);
       s.querySelector('.indietro').addEventListener('click', function () { self.home(); });
       s.querySelector('.gioca').addEventListener('click', function () { self.preparazione(); });
@@ -160,6 +162,22 @@
         b.addEventListener('click', function () { if (!venduta) self.compra(function () { return pr.compraCarta(id); }, b); });
         o.appendChild(b);
         v.appendChild(o);
+      });
+      // tre booster: si possono comprare tutti, e si aprono subito
+      var vb = s.querySelector('.vetrina-booster');
+      (n.booster || []).forEach(function (tipo, i) {
+        var aperto = n.aperti.indexOf(i) >= 0, prezzo = pr.prezzoBooster(tipo), b = Booster.tipo(tipo);
+        var o = el('div', 'offerta-booster' + (aperto ? ' aperto' : '')), pk = UIBooster.pacchetto(tipo);
+        pk.addEventListener('click', function () { UI.avviso(b.nome + ' booster · ' + UIBooster.descrizione(b)); });
+        var lato = el('div', 'lato', '<small>' + UIBooster.descrizione(b) + '</small>');
+        var bt = el('button', 'btn' + (aperto || d.monete < prezzo ? ' spento' : ' oro'), aperto ? 'Opened' : UI.moneta(prezzo));
+        bt.addEventListener('click', function () {
+          if (aperto) return;
+          var esito = pr.compraBooster(i);
+          if (typeof esito === 'string') { UI.avviso(esito); UI.scuoti(bt); return; }
+          UIBooster.apri(tipo, esito, function () { self.negozio(); });
+        });
+        lato.appendChild(bt); o.appendChild(pk); o.appendChild(lato); vb.appendChild(o);
       });
       var banco = s.querySelector('.banco');
       // slot per un mazzo in piu'
@@ -191,7 +209,7 @@
         '<div class="corpo"><div class="impostazioni"><div class="opzioni"></div><div class="crediti pannello">' +
         '<b>SpellKeep</b> · build ' + BUILD + '<br>Cards, keywords, challengers and the computer player come from <b>MArcomage</b> ' +
         '(arcomage.net) by Mojmír Fendek and its community, released under the GNU GPL. Card art by the MArcomage contributors. ' +
-        'Castle textures from Quaternius (CC0). Icons from game-icons.net (CC BY 3.0). Fonts: Cinzel and Alegreya Sans (OFL).' +
+        'Castle textures from Quaternius (CC0). Icons from game-icons.net (CC BY 3.0). Fonts: Cinzel and Alegreya Sans (OFL). Music: chiptune loops made with Suno.' +
         '</div></div></div>';
       this.monta(s);
       s.querySelector('.indietro').addEventListener('click', function () { self.home(); });
@@ -203,6 +221,11 @@
         pr.azzera(); UI.avviso('Progress reset'); self.home();
       });
       o.appendChild(r);
+      var mu = el('button', 'pannello riga', '');
+      function scriviMusica() { mu.innerHTML = '<span>Music: ' + (Musica.on ? 'on' : 'off') + '<small>Chiptune loops, off by default</small></span>'; }
+      scriviMusica();
+      mu.addEventListener('click', function () { Musica.imposta(!Musica.on); scriviMusica(); });
+      o.insertBefore(mu, r);
     }
   };
 

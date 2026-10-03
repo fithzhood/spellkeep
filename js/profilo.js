@@ -16,7 +16,12 @@
     prezzoSfida: function (nome) { return Math.round((ECONOMIA.sfide[nome] || 100) * 1.1); },
     cartePerNegozio: 5,
     probRarita: { C: 65, U: 29, R: 6 },              // come la pescata dal mazzo
-    slotPartenza: 1, slotMassimi: 8
+    slotPartenza: 1, slotMassimi: 8,
+    // booster: tre carte. Rarita' estratte come dal mazzo (probRarita), tranne il booster raro (tre rare).
+    prezzoBooster: 40, prezzoBoosterRaro: 150,
+    boosterPerNegozio: 3, boosterPremio: 3,           // nel negozio, e fra cui scegliere dopo una vittoria
+    probBoosterRaro: 0.05,                            // per ogni posto: quanto spesso esce il booster raro
+    rivendita: { C: 4, U: 10, R: 25 }                 // una carta doppia trovata in un booster si rivende da sola
   };
 
   function Profilo(dati) { this.d = dati; }
@@ -27,6 +32,56 @@
   }
   function vendibili(r) {
     return Motore.catalogo.lista.filter(function (d) { return d.rarita === r && d.kw.indexOf('Forbidden') < 0; }).map(function (d) { return d.id; });
+  }
+
+  // ------------------------------------------------------------------ booster
+  // Un tipo per ogni keyword (tranne Forbidden e Flare blitz), uno per le carte senza keyword, uno per colore di
+  // costo (rosso = mattoni, blu = gemme, verde = reclute, bianco = costo zero, multicolore = misto) e il raro.
+  // Le carte Forbidden non escono mai: nei mazzi non si possono usare.
+  var TIPI_BOOSTER = null;
+  function tipoCosto(d) {
+    var k = ['b', 'g', 'r'].filter(function (n) { return d.costo[n] > 0; });
+    return k.length === 0 ? 'z' : k.length > 1 ? 'm' : k[0];
+  }
+  function nomeKw(k) { return k.replace(/\s*\(.*\)$/, ''); }
+  function tipiBooster() {
+    if (TIPI_BOOSTER) return TIPI_BOOSTER;
+    var l = [];
+    (window.KEYWORD || []).map(function (k) { return k.nome; }).filter(function (n) { return n !== 'Forbidden' && n !== 'Flare blitz'; })
+      .sort().forEach(function (n) {
+        l.push({ id: 'kw-' + n.toLowerCase().replace(/ /g, '_'), nome: n, kw: n,
+          filtro: function (d) { return d.keyword.some(function (k) { return nomeKw(k) === n; }); } });
+      });
+    l.push({ id: 'senza', nome: 'No keyword', filtro: function (d) { return !d.keyword.length; } });
+    [['b', 'Red'], ['g', 'Blue'], ['r', 'Green'], ['z', 'White'], ['m', 'Multicolor']].forEach(function (c) {
+      l.push({ id: 'col-' + c[0], nome: c[1], costo: c[0], filtro: function (d) { return tipoCosto(d) === c[0]; } });
+    });
+    l.push({ id: 'raro', nome: 'Rare', raro: true, filtro: function (d) { return d.rarita === 'R'; } });
+    TIPI_BOOSTER = l;
+    return l;
+  }
+  function tipoBooster(id) { return tipiBooster().filter(function (b) { return b.id === id; })[0]; }
+  // n tipi diversi; il raro esce di rado
+  function estraiTipi(n, caso) {
+    caso = caso || Math.random;
+    var comuni = mescola(tipiBooster().filter(function (b) { return !b.raro; }).map(function (b) { return b.id; }), caso), out = [];
+    for (var i = 0; i < n; i++) out.push(out.indexOf('raro') < 0 && caso() < ECONOMIA.probBoosterRaro ? 'raro' : comuni.pop());
+    return out;
+  }
+  // tre carte diverse del tipo: la rarita' si estrae come dal mazzo e, se quel tipo non ne ha piu', si passa
+  // alla vicina (come nel negozio). Il booster raro da' tre rare.
+  function estraiCarte(id, caso) {
+    caso = caso || Math.random;
+    var b = tipoBooster(id), e = ECONOMIA, pool = { C: [], U: [], R: [] }, carte = [];
+    Motore.catalogo.lista.forEach(function (d) { if (d.kw.indexOf('Forbidden') < 0 && b.filtro(d)) pool[d.rarita].push(d.id); });
+    ['C', 'U', 'R'].forEach(function (r) { mescola(pool[r], caso); });
+    for (var i = 0; i < 3; i++) {
+      var r = 'R';
+      if (!b.raro) { var x = caso() * 100; r = x < e.probRarita.C ? 'C' : x < e.probRarita.C + e.probRarita.U ? 'U' : 'R'; }
+      var ordine = { C: ['C', 'U', 'R'], U: ['U', 'R', 'C'], R: ['R', 'U', 'C'] }[r];
+      for (var k = 0; k < 3; k++) { if (pool[ordine[k]].length) { carte.push(pool[ordine[k]].pop()); break; } }
+    }
+    return carte;
   }
 
   Profilo.nuovo = function (caso) {
@@ -53,7 +108,14 @@
   Profilo.carica = function () {
     try {
       var s = localStorage.getItem(CHIAVE);
-      if (s) { var d = JSON.parse(s); if (d && d.versione === VERSIONE) return new Profilo(d); }
+      if (s) {
+        var d = JSON.parse(s);
+        if (d && d.versione === VERSIONE) {
+          // profili di prima dei booster: il negozio in corso li riceve subito
+          if (d.negozio && !d.negozio.booster) { d.negozio.booster = estraiTipi(ECONOMIA.boosterPerNegozio); d.negozio.aperti = []; }
+          return new Profilo(d);
+        }
+      }
     } catch (e) { /* profilo illeggibile: si riparte */ }
     var p = Profilo.nuovo(); p.salva(); return p;
   };
@@ -81,6 +143,8 @@
     s.partite++;
     if (esito === 1) s.vinte++; else if (esito === 2) s.perse++; else s.pari++;
     if (esito === 1 && opz.sfida) s.sfideVinte[opz.sfida] = (s.sfideVinte[opz.sfida] || 0) + 1;
+    // dopo una vittoria: tre booster fra cui sceglierne uno. Resta in attesa finche' non lo si apre.
+    if (esito === 1) this.d.premio = estraiTipi(ECONOMIA.boosterPremio);
     this.d.partita = null;
     this.rinnovaNegozio();
     this.salva();
@@ -104,6 +168,7 @@
     var bloccate = (window.SFIDE || []).map(function (s) { return s.nome; }).filter(function (n) { return self.d.sfide.indexOf(n) < 0; });
     this.d.negozio = {
       carte: carte, vendute: [],
+      booster: estraiTipi(e.boosterPerNegozio, caso), aperti: [],
       sfida: bloccate.length ? bloccate[Math.floor(caso() * bloccate.length)] : null
     };
   };
@@ -134,6 +199,39 @@
     this.salva(); return null;
   };
 
+  // apre un booster: le carte nuove entrano nella collezione, le doppie si rivendono da sole.
+  // Restituisce [{ id, doppia, rimborso }].
+  Profilo.prototype.apriBooster = function (tipo) {
+    var self = this, visti = {};
+    var esito = estraiCarte(tipo).map(function (id) {
+      var r = Motore.catalogo.perId[id].rarita, doppia = self.possiede(id) || visti[id];
+      visti[id] = 1;
+      if (doppia) { self.d.monete += ECONOMIA.rivendita[r]; return { id: id, doppia: true, rimborso: ECONOMIA.rivendita[r] }; }
+      self.d.collezione.push(id);
+      return { id: id, doppia: false, rimborso: 0 };
+    });
+    var st = this.d.stat;
+    st.booster = (st.booster || 0) + 1;
+    this.salva();
+    return esito;
+  };
+  Profilo.prototype.prezzoBooster = function (tipo) { return tipo === 'raro' ? ECONOMIA.prezzoBoosterRaro : ECONOMIA.prezzoBooster; };
+  // il booster scelto fra quelli del premio: il premio si consuma
+  Profilo.prototype.scegliPremio = function (tipo) {
+    if (!this.d.premio || this.d.premio.indexOf(tipo) < 0) return null;
+    this.d.premio = null;
+    return this.apriBooster(tipo);
+  };
+  // i booster del negozio si possono comprare tutti; i restituisce l'esito, o una stringa d'errore
+  Profilo.prototype.compraBooster = function (i) {
+    var n = this.d.negozio, tipo = n && n.booster && n.booster[i];
+    if (!tipo || n.aperti.indexOf(i) >= 0) return 'Not on sale';
+    var prezzo = this.prezzoBooster(tipo);
+    if (this.d.monete < prezzo) return 'Not enough coins';
+    this.d.monete -= prezzo; n.aperti.push(i);
+    return this.apriBooster(tipo);
+  };
+
   // ------------------------------------------------------------------ mazzi
   Profilo.prototype.aggiungiAlMazzo = function (i, id) {
     var m = this.mazzo(i), d = Motore.catalogo.perId[id];
@@ -152,4 +250,5 @@
 
   radice.Profilo = Profilo;
   radice.ECONOMIA = ECONOMIA;
+  radice.Booster = { tipi: tipiBooster, tipo: tipoBooster, estraiTipi: estraiTipi, estraiCarte: estraiCarte, tipoCosto: tipoCosto };
 })(window);

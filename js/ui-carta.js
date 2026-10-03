@@ -34,7 +34,12 @@
   }
   function kwNome(k) { return k.replace(/\s*\(.*\)$/, ''); }
   function kwFile(k) { return kwNome(k).toLowerCase().replace(/ /g, '_') + '.png'; }
-  function kwIcona(k) { return 'img/keyword/' + kwFile(k); }
+  // la versione nell'indirizzo: un'icona ridisegnata non resta vecchia nella cache del browser
+  var VER = (function () {
+    var s = document.querySelector('script[src*="ui-carta.js"]'), m = s && /[?&]v=(\d+)/.exec(s.getAttribute('src'));
+    return m ? '?v=' + m[1] : '';
+  })();
+  function kwIcona(k) { return 'img/keyword/' + kwFile(k) + VER; }
   // le icone delle keyword sono pixel art 16x16: si mostrano a un multiplo intero di pixel fisici (sul Galaxy A25,
   // 2,8125 px fisici per px CSS, ogni pixel dell'icona diventa 3x3 sulla carta e 4x4 nella lente), mai a misure
   // che fanno pixel diseguali. kwPx(minimo) = la misura piu' piccola di questo tipo che non scende sotto il minimo.

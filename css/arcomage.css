@@ -345,3 +345,69 @@ img { -webkit-user-drag: none; }
 
 .mano.testuale { height: calc(var(--cw) * 1.4 * .8); }
 .mano.testuale .carta .eff { padding-bottom: 0; display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: var(--righe, 3); line-clamp: var(--righe, 3); overflow: hidden; flex: none; }
+
+/* ------------------------------------------------------------ booster (js/ui-booster.js) */
+.booster { --t: #6b6157; --bw: 72px; position: relative; width: var(--bw); height: calc(var(--bw) * 1.42); flex: none; cursor: pointer;
+  border-radius: 5px; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  padding: 10px 4px 8px;
+  background: linear-gradient(155deg, color-mix(in srgb, var(--t) 50%, #fff) 0%, var(--t) 36%, color-mix(in srgb, var(--t) 50%, #000) 100%);
+  border: 1px solid color-mix(in srgb, var(--t) 40%, #fff);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 5px 12px rgba(0,0,0,.6); transition: transform .14s; }
+.booster::before, .booster::after { content: ""; position: absolute; left: 0; right: 0; height: 6px; z-index: 1;
+  background: repeating-linear-gradient(90deg, rgba(0,0,0,.4) 0 2px, rgba(255,255,255,.18) 2px 4px); }
+.booster::before { top: 0; } .booster::after { bottom: 0; }
+.booster .b-icona { width: calc(var(--bw) * .62); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle, rgba(0,0,0,.18), rgba(0,0,0,.45)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.22); }
+.booster .b-icona img { image-rendering: pixelated; display: block; }
+.booster .b-icona svg { width: 60%; height: 60%; color: #fff; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+.booster .b-nome { font-family: var(--testo); font-weight: 800; font-size: .58rem; line-height: 1.05; color: #fff; text-align: center;
+  text-shadow: 0 1px 2px rgba(0,0,0,.8); max-width: 100%; overflow-wrap: anywhere; }
+.booster .b-sotto { font-family: var(--display); font-size: .4rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.75); }
+.b-zero { font-style: normal; width: 62%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #555;
+  font-family: var(--display); font-weight: 900; font-size: .9rem; }
+.b-tre { display: flex; gap: 2px; } .b-tre u { width: 6px; height: 18px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,.4); }
+.b-tre .b { background: var(--mat); } .b-tre .g { background: var(--gem); } .b-tre .r { background: var(--rec); }
+.b-rombo { width: 38%; aspect-ratio: 1; transform: rotate(45deg); background: linear-gradient(135deg, #fff3c4, #f2bd4c 45%, #a4701c); box-shadow: 0 0 0 1px rgba(0,0,0,.5), 0 0 12px rgba(255,220,120,.8); }
+.b-bianca { width: 34%; aspect-ratio: 5 / 7; border-radius: 3px; background: linear-gradient(160deg, #f5ecda, #b9ad96); box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
+.booster.raro::after { height: 100%; top: 0; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.45) 50%, transparent 65%) -150% 0 / 300% 100% no-repeat;
+  animation: luccica 2.6s ease-in-out infinite; }
+.booster.raro { box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 0 14px rgba(242,189,76,.55), 0 5px 12px rgba(0,0,0,.6); }
+@keyframes luccica { 0%, 40% { background-position: -150% 0; } 100% { background-position: 150% 0; } }
+.booster.grande { --bw: 112px; cursor: default; animation: vibra .6s ease-in-out; }
+.booster.grande .b-nome { font-size: .78rem; } .booster.grande .b-sotto { font-size: .5rem; }
+.booster.strappa { animation: strappa .4s ease-in forwards; }
+@keyframes vibra { 0%, 100% { transform: none; } 20% { transform: rotate(-3deg); } 40% { transform: rotate(3deg); } 60% { transform: rotate(-2deg); } 80% { transform: rotate(2deg); } }
+@keyframes strappa { to { transform: translateY(-40px) scale(1.1); opacity: 0; } }
+@media (hover: hover) { .pacchi .booster:hover, .vetrina-booster .booster:hover { transform: translateY(-3px); } }
+.pacchi { display: flex; gap: 12px; justify-content: center; }
+
+.apertura { position: fixed; inset: 0; z-index: 75; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 8px calc(12px + var(--lato)); background: rgba(8,9,14,.86); animation: dissolve .3s; }
+.booster-aperto .velo { z-index: 80; } .booster-aperto .lente { z-index: 81; }
+.ap-titolo { font-family: var(--display); font-weight: 800; font-size: 1rem; letter-spacing: .06em; color: var(--oro); }
+.ap-palco { min-height: calc(110px * 1.4 + 26px); display: grid; place-items: center; }
+.ap-carte { display: flex; gap: 14px; }
+.ap-posto { display: flex; flex-direction: column; align-items: center; gap: 6px; perspective: 700px; }
+.ap-giro { position: relative; width: 110px; height: calc(110px * 1.4); transform-style: preserve-3d; transition: transform .5s cubic-bezier(.3,.7,.3,1); transform: rotateY(180deg); }
+.ap-posto.girata .ap-giro { transform: none; }
+.ap-giro > * { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.ap-retro.dorso { width: 100%; height: 100%; border-radius: 8px; transform: rotateY(180deg); }
+.ap-giro .carta { --cw: 110px; cursor: pointer; }
+.ap-tag { font-size: .7rem; font-weight: 800; white-space: nowrap; opacity: 0; transition: opacity .3s .35s; }
+.ap-posto.girata .ap-tag { opacity: 1; }
+.ap-tag.nuova { color: var(--oro); letter-spacing: .14em; text-transform: uppercase; font-family: var(--display); }
+.ap-tag.doppia { color: var(--ink3); }
+.ap-riepilogo { min-height: 1.2em; font-size: .74rem; color: var(--ink2); }
+.apertura .azioni { width: 220px; }
+.apertura .btn:disabled { opacity: .4; }
+
+/* booster nel negozio */
+.vetrina-booster { display: flex; gap: 14px; justify-content: center; align-items: flex-end; }
+.offerta-booster { display: flex; align-items: center; gap: 8px; }
+.offerta-booster .lato { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: 96px; }
+.offerta-booster .lato small { font-size: .56rem; color: var(--ink2); line-height: 1.15; }
+.offerta-booster .btn { min-width: 84px; padding: 0 8px; }
+.offerta-booster.aperto .booster { filter: grayscale(.8) brightness(.5); }
+.finale .pacchi { margin: 2px 0 4px; }
+.finale .scelta-t { font-family: var(--display); font-size: .62rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--ink2); }
+.vetrina-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
