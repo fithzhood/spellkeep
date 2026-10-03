@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta name="theme-color" content="#10121b">
+<title>SpellKeep — Card Gallery</title>
+<link rel="icon" href="img/icona/icona-192.png">
+<link rel="stylesheet" href="css/arcomage.css?v=95">
+<link rel="stylesheet" href="css/carte-sito.css?v=95">
+</head>
+<body class="sito-carte">
+<div class="sito">
+  <header class="sito-testa">
+    <div class="riga1">
+      <h1 class="titolo">SpellKeep <small>Card Gallery</small></h1>
+      <span class="conto" id="conto"></span>
+      <button class="btn btn-filtri" id="apri-filtri" type="button">Filters<b id="n-filtri"></b></button>
+    </div>
+    <div class="riga2">
+      <label class="cerca"><input id="cerca" type="search" placeholder="Search names and card text" autocomplete="off" spellcheck="false"></label>
+      <label class="ordina"><span class="etic">Sort</span>
+        <select id="ordina">
+          <option value="id">Number</option>
+          <option value="nome">Name</option>
+          <option value="costo">Cost</option>
+          <option value="rarita">Rarity</option>
+          <option value="livello">Level</option>
+        </select></label>
+      <button class="btn verso" id="verso" type="button" aria-label="Reverse order">↑</button>
+    </div>
+    <div class="riga3">
+      <span class="etic">Size</span>
+      <input id="zoom" type="range" min="0" max="100" step="1" aria-label="Card size">
+      <div class="attivi" id="attivi"></div>
+    </div>
+  </header>
+  <div class="sc-corpo">
+    <aside class="sc-filtri" id="filtri">
+      <div class="filtri-testa"><span class="titolo">Filters</span>
+        <button class="btn" id="azzera" type="button">Reset</button>
+        <button class="btn oro" id="chiudi-filtri" type="button">Show <b id="conto2"></b></button></div>
+      <div class="filtri-corpo" id="filtri-corpo"></div>
+    </aside>
+    <main class="sc-griglia" id="griglia"></main>
+    <p class="vuoto" id="vuoto" hidden>No card matches these filters.</p>
+  </div>
+  <div class="build" id="build"></div>
+</div>
+<script src="dati/carte.js?v=95"></script>
+<script src="dati/arte.js?v=95"></script>
+<script src="dati/icone.js?v=95"></script>
+<script src="js/php.js?v=95"></script>
+<script src="js/motore.js?v=95"></script>
+<script src="js/ui-carta.js?v=95"></script>
+<script src="js/carte-sito.js?v=95"></script>
+</body>
+</html>
