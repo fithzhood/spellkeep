@@ -73,7 +73,8 @@
     // illustrazione nuova se c'e' (dati/arte.js), altrimenti quella originale 80x60
     var arte = window.ARTE && window.ARTE.has(d.id) ? 'img/arte/card_' + d.id + '.jpg?h=' + ((window.ARTE_H || {})[d.id] || '') : 'img/carte/card_' + d.id + '.png';
     // costo e rarita' in una fascia sopra l'illustrazione (non la coprono); la fascia ha il colore della rarita'
-    e.innerHTML = '<div class="testa-c"><div class="costi">' + costi + '</div><div class="rar ' + d.rarita + '"></div></div>' +
+    // il nome compare nella fascia solo sulle carte grandi (CSS: .nome-t); su quelle strette resta sotto l'illustrazione
+    e.innerHTML = '<div class="testa-c"><div class="costi">' + costi + '</div><div class="nome-t">' + d.nome + '</div><div class="rar ' + d.rarita + '"></div></div>' +
       '<div class="arte"><img src="' + arte + '" alt="" loading="lazy">' +
       '<div class="kw">' + d.keyword.map(function (k) { return '<img src="' + kwIcona(k) + '" alt="">'; }).join('') + '</div></div>' +
       '<div class="nomec">' + d.nome + '</div><div class="eff">' + testoEffetto(d) + '</div>' +

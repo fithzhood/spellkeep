@@ -491,3 +491,14 @@ img { -webkit-user-drag: none; }
 .mano .carta .testa-c .costo { font-size: .64rem; min-width: 1rem; height: 1rem; }
 .mano .carta .arte { aspect-ratio: 16 / 8.5; }
 .mano .carta .etichetta-nuova { top: 1.15rem; }
+/* nome nella fascia, solo dove la carta e' larga abbastanza: lente, carta giocata, sito delle carte, apertura dei booster */
+.carta .nome-t { display: none; flex: 1 1 auto; min-width: 0; text-align: center; padding: 0 2px; color: var(--ink);
+  font-weight: 800; font-size: .66rem; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0,0,0,.85), 0 0 4px rgba(0,0,0,.5); }
+.carta.rarU .nome-t, .carta.rarR .nome-t { color: #fff; }
+.lente .carta .nome-t, .entrata .carta .nome-t, .sc-griglia .carta .nome-t, .ap-giro .carta .nome-t { display: block; }
+.lente .carta .nomec, .entrata .carta .nomec, .sc-griglia .carta .nomec, .ap-giro .carta .nomec { display: none; }
+.lente .carta .nome-t, .entrata .carta .nome-t { font-family: var(--display); font-weight: 700; font-size: .78rem; white-space: normal; }
+.sc-griglia .carta .nome-t { font-size: calc(.66rem * var(--s)); white-space: normal; }
+.ap-giro .carta .nome-t { font-size: .64rem; }
+.lente .carta .eff, .entrata .carta .eff, .sc-griglia .carta .eff, .ap-giro .carta .eff { padding-top: 3px; }
