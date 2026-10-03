@@ -798,3 +798,8 @@ body:has(.tut-faro) .velo { z-index: 73; background: transparent !important; }
 .tut-fum.mini { width: 190px; }
 .tut-fum.mini p, .tut-fum.mini .f-piede, .tut-fum.mini .f-esci { display: none; }
 .tut-fum.mini h3 { font-size: .72rem; margin: 0; }
+/* fumetto del tutorial: niente scivolate ne' allargamenti animati (si misurava a meta' e usciva dallo schermo);
+   cambia posto in dissolvenza. Il riflettore si sposta senza rimbalzo. */
+.tut-fum { transition: opacity .14s; }
+.tut-fum.sposta { opacity: 0; }
+.tut-faro { transition: opacity .45s, box-shadow .45s, left .4s ease, top .4s ease, width .4s ease, height .4s ease; }

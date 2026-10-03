@@ -205,7 +205,14 @@
       evita.forEach(function (e) { c += sovrapp(box, e[0]) * e[1]; });
       if (c < costo) { costo = c; meglio = p; }
     });
-    f.style.left = Math.round(meglio[0]) + 'px'; f.style.top = Math.round(meglio[1]) + 'px';
+    // sempre dentro lo schermo
+    var x = Math.round(Math.max(g, Math.min(meglio[0], W - fw - g))), y = Math.round(Math.max(g, Math.min(meglio[1], H - fh - g)));
+    // cambiare posto: sparisce e ricompare li' (attraversare lo schermo scivolando sembrava strano)
+    var ox = parseFloat(f.style.left), oy = parseFloat(f.style.top);
+    if (isNaN(ox) || (Math.abs(ox - x) < 3 && Math.abs(oy - y) < 3)) { f.style.left = x + 'px'; f.style.top = y + 'px'; return; }
+    clearTimeout(this.tSposta);
+    f.classList.add('sposta');
+    this.tSposta = setTimeout(function () { f.style.left = x + 'px'; f.style.top = y + 'px'; f.classList.remove('sposta'); }, 140);
   };
 
   // una mossa del copione (avversario, o salti in avanti): la carta entra e il motore la esegue
