@@ -785,3 +785,4 @@ button.seg::after { content: ""; position: absolute; inset: -9px; border-radius:
 /* caselle avversari: i nomi lunghi (Silas Quickfinger, Tamsin the Beastmaster) vanno a capo invece di tagliarsi */
 .caselle .avv .nome { font-size: .58rem; overflow-wrap: anywhere; -webkit-line-clamp: 3; }
 .caselle .avv .nome { font-family: var(--testo); font-weight: 800; font-size: .72rem; letter-spacing: 0; overflow-wrap: normal; line-height: 1.1; }
+.caselle .avv .nome { overflow-wrap: break-word; }
