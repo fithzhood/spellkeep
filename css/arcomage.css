@@ -519,3 +519,13 @@ img { -webkit-user-drag: none; }
 /* booster raro: la stella delle rare, non il rombo */
 .b-rombo { transform: none; width: 46%; box-shadow: none; filter: drop-shadow(0 0 6px rgba(255,220,120,.85));
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+/* editor: le carte gia' nel mazzo restano ben visibili, con bordo d'oro e una spunta piccola nell'angolo */
+.griglia .carta.mini.dentro { filter: none; border-color: var(--oro); box-shadow: 0 0 0 1px var(--oro), 0 3px 8px rgba(0,0,0,.5); }
+.griglia .carta.mini.dentro::after { content: "✓"; inset: auto; right: 2px; bottom: 2px; width: 1.05rem; height: 1.05rem; border-radius: 50%;
+  display: grid; place-items: center; font-size: .66rem; font-weight: 900; color: #1a1408; background: var(--oro); text-shadow: none;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+.schede button .troppe { color: #ffb05c; }
+.avviso-mazzo ul { list-style: none; display: flex; flex-direction: column; gap: 3px; font-size: .8rem; }
+.avviso-mazzo li.no { color: #ffb05c; } .avviso-mazzo li.ok { color: var(--su); }
+.avviso-mazzo .piccolo { font-size: .66rem; color: var(--ink3); max-width: 340px; }
+.finale .riquadro.avviso-mazzo { background: rgba(14,15,22,.96); }

@@ -140,11 +140,12 @@
     negozio: function () {
       var self = this, pr = this.profilo, d = pr.d, n = d.negozio, s = el('div', 'schermo schermo-negozio');
       if (!n) { pr.rinnovaNegozio(); pr.salva(); n = d.negozio; }
-      s.innerHTML = '<div class="testa"><button class="btn indietro">Home</button><h2>Shop</h2>' + this.cassa() + '<button class="btn oro gioca">Play</button></div>' +
+      s.innerHTML = '<div class="testa"><button class="btn indietro">Home</button><h2>Shop</h2>' + this.cassa() + '<button class="btn mazzi">Decks</button><button class="btn oro gioca">Play</button></div>' +
         '<div class="corpo"><div class="negozio"><div class="vetrina-col"><div class="vetrina"></div><div class="vetrina-booster"></div></div><div class="banco"></div></div></div>';
       this.monta(s);
       s.querySelector('.indietro').addEventListener('click', function () { self.home(); });
       s.querySelector('.gioca').addEventListener('click', function () { self.preparazione(); });
+      s.querySelector('.mazzi').addEventListener('click', function () { new Editor(self, d.mazzoAttivo); });
       var v = s.querySelector('.vetrina');
       if (!n.carte.length) v.appendChild(el('div', 'vuoto-msg', 'You own every card. Impressive.'));
       n.carte.forEach(function (id) {

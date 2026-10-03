@@ -268,7 +268,8 @@
     if (!this.possiede(id)) return 'Not in your collection';
     if (d.kw.indexOf('Forbidden') >= 0) return 'Forbidden cards cannot be used in a deck';
     if (m[d.rarita].indexOf(id) >= 0) return 'Already in the deck';
-    if (m[d.rarita].length >= 15) return { C: 'Common', U: 'Uncommon', R: 'Rare' }[d.rarita] + ' section is full';
+    // oltre 15 si puo' andare mentre si costruisce (mazzoValido decide se si gioca); un tetto solo contro gli eccessi
+    if (m[d.rarita].length >= 40) return 'Too many ' + { C: 'common', U: 'uncommon', R: 'rare' }[d.rarita] + ' cards';
     m[d.rarita].push(id);
     m.segnalini = Motore.segnaliniAuto(m);
     this.salva(); return null;

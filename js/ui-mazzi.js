@@ -1,5 +1,6 @@
 // Editor dei mazzi: collezione a sinistra (con filtri), mazzo a destra diviso per rarita', segnalini.
-// Tocco = aggiungi/togli, tocco lungo = carta grande.
+// Tocco = carta grande con Add/Remove. Durante la costruzione si puo' andare oltre 15 carte per rarita' (prima si
+// aggiunge, poi si sceglie cosa togliere); uscendo con un mazzo non in regola compare un avviso, e il mazzo resta bozza.
 (function (radice) {
   'use strict';
   var el = UI.el;
@@ -20,7 +21,7 @@
       '<div class="lista-mazzo pannello"><div class="schede"></div><div class="righe"></div><div class="segnalini-mazzo"></div></div></div></div>';
     this.app.monta(s);
     this.s = s;
-    s.querySelector('.indietro').addEventListener('click', function () { self.app.home(); });
+    s.querySelector('.indietro').addEventListener('click', function () { self.esci(); });
     s.querySelector('.vista').addEventListener('click', function () { self.pr.d.imp.testo = !self.pr.d.imp.testo; self.pr.salva(); self.disegna(); });
     s.querySelector('h2').addEventListener('click', function () {
       var m = self.pr.mazzo(self.i), nome = window.prompt('Deck name', m.nome);
@@ -92,7 +93,7 @@
     var sch = s.querySelector('.schede'); sch.innerHTML = '';
     ['C', 'U', 'R'].forEach(function (r) {
       var n = m[r].length, b = el('button', self.scheda === r ? 'su' : '',
-        RARITA[r] + ' <span class="' + (n === 15 ? 'pieno' : 'vuoto') + '">' + n + '/15</span>');
+        RARITA[r] + ' <span class="' + (n === 15 ? 'pieno' : n > 15 ? 'troppe' : 'vuoto') + '">' + n + '/15</span>');
       b.addEventListener('click', function () { self.scheda = r; self.disegna(); });
       sch.appendChild(b);
     });
@@ -121,19 +122,33 @@
     });
   };
 
-  // un tocco apre la carta (con Aggiungi/Togli); il trascinamento fa solo scorrere la griglia
+  // un tocco apre la carta (con Aggiungi/Togli); il trascinamento fa solo scorrere la griglia.
+  // Si ascolta il CLICK e non il pointerup: aprendo la lente sul pointerup, il click che segue cadeva sul velo appena
+  // comparso e la richiudeva subito (per questo funzionava solo il tocco lungo, che il click non lo manda).
   Editor.prototype.impostaGriglia = function () {
-    var self = this, g = this.s.querySelector('.griglia'), partito = null;
-    g.addEventListener('pointerdown', function (ev) {
-      var c = ev.target.closest('.carta'); if (!c) return;
-      partito = { x: ev.clientX, y: ev.clientY, id: +c.dataset.id };
+    var self = this, g = this.s.querySelector('.griglia');
+    g.addEventListener('click', function (ev) {
+      var c = ev.target.closest('.carta'); if (c) self.lente(+c.dataset.id);
     });
-    g.addEventListener('pointermove', function (ev) {
-      if (partito && (Math.abs(ev.clientX - partito.x) > 10 || Math.abs(ev.clientY - partito.y) > 10)) partito = null;
-    });
-    g.addEventListener('pointerup', function () { var p = partito; partito = null; if (p) self.lente(p.id); });
-    g.addEventListener('pointercancel', function () { partito = null; });
     g.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+  };
+
+  // uscendo: se un mazzo toccato non ha 15 carte per rarita', si dice cosa manca o avanza
+  Editor.prototype.esci = function () {
+    var self = this, m = this.pr.mazzo(this.i);
+    if (this.pr.mazzoValido(m)) return this.app.home();
+    var righe = ['C', 'U', 'R'].map(function (r) {
+      var n = m[r].length, diff = n - 15;
+      return '<li class="' + (diff ? 'no' : 'ok') + '">' + RARITA[r] + ' <b>' + n + '/15</b>' +
+        (diff > 0 ? ' · remove ' + diff : diff < 0 ? ' · add ' + (-diff) : ' ✓') + '</li>';
+    }).join('');
+    var f = el('div', 'finale'), r = el('div', 'riquadro pannello avviso-mazzo');
+    r.innerHTML = '<h2>Deck not ready</h2><p>A deck needs exactly 15 cards of each rarity to be played.</p><ul>' + righe + '</ul>' +
+      '<p class="piccolo">If you leave now, "' + m.nome + '" is kept as a draft and can’t be used in games until it is fixed.</p>';
+    var az = el('div', 'azioni'), resta = el('button', 'btn oro', 'Keep editing'), via = el('button', 'btn', 'Leave as draft');
+    resta.addEventListener('click', function () { f.remove(); });
+    via.addEventListener('click', function () { f.remove(); self.app.home(); });
+    az.appendChild(via); az.appendChild(resta); r.appendChild(az); f.appendChild(r); document.body.appendChild(f);
   };
 
   Editor.prototype.alterna = function (id, c) {
