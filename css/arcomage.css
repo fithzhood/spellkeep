@@ -780,3 +780,5 @@ button.seg::after { content: ""; position: absolute; inset: -9px; border-radius:
 .tp-avv-c { display: flex; flex-direction: column; align-items: center; gap: 3px; animation: tp-sale .5s both; }
 .tp-avv-c img { width: 50px; height: 50px; border-radius: 8px; box-shadow: 0 0 0 1px var(--oro); }
 .tp-avv-c b { font-size: .62rem; color: var(--oro); font-family: var(--display); letter-spacing: .08em; text-transform: uppercase; }
+/* valore delle quantita' variabili nel testo della carta: (N=5) */
+.carta .eff .nval { color: #ffd76e; font-weight: 800; white-space: nowrap; }

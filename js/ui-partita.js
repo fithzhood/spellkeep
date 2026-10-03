@@ -154,7 +154,7 @@
           c.addEventListener('click', function () {
             if (self.bloccato) return;
             self.selLui = pos;
-            UI.apriLente(cid, { nota: 'In the opponent\'s hand', chiusa: function () { self.selLui = 0; self.disegnaAlto(); } });
+            UI.apriLente(cid, { nota: 'In the opponent\'s hand', partita: self.p, chi: 2, chiusa: function () { self.selLui = 0; self.disegnaAlto(); } });
             self.disegnaAlto();
           });
         })(i, id);
@@ -189,7 +189,7 @@
       var id = PHP.num(g.Hand.get(i)); ora.push(id);
       // nuova = pescata dopo la tua ultima mossa (il motore lo tiene in NewCards, come l'originale): resta segnata per tutto il turno
       var nuova = !!(g.NewCards && g.NewCards.has(i));
-      var c = UI.carta(id, { risorse: ris, spenta: !this.p.giocabile(1, i), nuova: nuova });
+      var c = UI.carta(id, { risorse: ris, spenta: !this.p.giocabile(1, i), nuova: nuova, partita: this.p, chi: 1 });
       c.dataset.pos = i;
       if (i === this.sel) c.classList.add('scelta');
       mano.appendChild(c);
@@ -232,7 +232,7 @@
     this.aggiorna();
     var giocabile = this.p.giocabile(1, pos);
     UI.apriLente(id, {
-      risorse: { b: g.Bricks, g: g.Gems, r: g.Recruits },
+      risorse: { b: g.Bricks, g: g.Gems, r: g.Recruits }, partita: this.p, chi: 1,
       nota: !giocabile ? (this.p.sfida && d.rarita === 'R' ? 'Rare cards are banned in challenges' : 'Not enough resources') : '',
       chiusa: function () { self.sel = 0; self.modo = 0; self.aggiorna(); },
       azioni: function (lato) {

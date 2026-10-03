@@ -56,10 +56,12 @@
   misureKw();
   window.addEventListener('resize', misureKw);       // lo zoom del browser cambia devicePixelRatio
   // testo della carta: le keyword citate in grassetto
-  function testoEffetto(d) {
-    var t = d.effetto.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  // opz.partita / opz.chi: in partita le quantita' variabili (N = #Dragon in game) hanno il valore fra parentesi
+  function testoEffetto(d, opz) {
+    var grezzo = (opz && opz.partita && window.Variabili && Variabili.annota(d, opz.partita, opz.chi || 1)) || d.effetto;
+    var t = grezzo.replace(/&/g, '&amp;').replace(/</g, '&lt;');
     Object.keys(KW).forEach(function (k) { t = t.replace(new RegExp('\\b(' + k + ')\\b', 'g'), '<b>$1</b>'); });
-    return t;
+    return t.replace(/\u0001/g, '<span class="nval">').replace(/\u0002/g, '</span>');
   }
 
   // opz: { risorse: {b,g,r} per colorare i costi che mancano, spenta, nuova, mini }
@@ -78,7 +80,7 @@
     e.innerHTML = '<div class="testa-c"><div class="costi c' + nCosti + '">' + costi + '</div><div class="nome-t">' + d.nome + '</div><div class="rar ' + d.rarita + '"></div></div>' +
       '<div class="arte"><img src="' + arte + '" alt="" loading="lazy">' +
       '<div class="kw">' + d.keyword.map(function (k) { return '<img src="' + kwIcona(k) + '" alt="">'; }).join('') + '</div></div>' +
-      '<div class="nomec">' + d.nome + '</div><div class="eff">' + testoEffetto(d) + '</div>' +
+      '<div class="nomec">' + d.nome + '</div><div class="eff">' + testoEffetto(d, opz) + '</div>' +
       (opz.nuova ? '<div class="etichetta-nuova">New</div>' : '');
     e.dataset.id = d.id;
     return e;
@@ -131,7 +133,7 @@
     var d = dati(id);
     var velo = el('div', 'velo'), lente = el('div', 'lente');
     velo.addEventListener('click', chiudiLente);
-    lente.appendChild(carta(id, { risorse: opz.risorse }));
+    lente.appendChild(carta(id, { risorse: opz.risorse, partita: opz.partita, chi: opz.chi }));
     var lato = el('div', 'lato');
     if (opz.nota) lato.appendChild(el('div', 'nota' + (opz.notaNeutra ? ' neutra' : ''), opz.nota));
     var lista = el('div', 'kwlista');

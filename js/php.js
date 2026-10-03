@@ -656,6 +656,7 @@
     var ex = new Esecutore({ variabili: variabili, rng: rng || Math.random });
     try { ex.esegui(compila(codice)); }
     catch (e) { if (e instanceof Ritorna) return e.v; throw e; }
+    finally { if (PHP.osserva) PHP.osserva(codice, ex.v); }   // solo per le prove (strumenti/prova-variabili.js)
     return null;
   }
 
