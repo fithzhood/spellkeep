@@ -28,7 +28,7 @@
     if (opz.nuova && this.p.stato === 'in corso') this.presentazione(parti); else parti();
   }
 
-  function tipoAvv(av) { return av.tipo === 'rivale' ? 'Rival · ' + av.tribu : av.tipo === 'sfidante' ? 'Challenger' : 'Random deck'; }
+  function tipoAvv(av) { return av.tipo === 'rivale' ? 'Medium · ' + av.tribu : av.tipo === 'sfidante' ? 'Advanced' : av.mazzoCasuale ? 'Basic · random deck' : 'Basic · starter deck'; }
   function volto(app, chi, nome, sotto, cls) {
     return '<div class="volto ' + (cls || '') + '"><img src="' + app.avatar(chi) + '" alt=""><b>' + nome + '</b>' + (sotto ? '<small>' + sotto + '</small>' : '') + '</div>';
   }
@@ -289,8 +289,9 @@
     this.aggiorna();
     setTimeout(function () {
       if (self.chiuso) return;
-      // rivali dal livello 6: la CPU nuova (js/cpu.js); tutti gli altri: quella originale di MArcomage
-      var m = self.av.cpu === 'nuova' && window.Cpu ? Cpu.mossa(self.p, 2) : Motore.mossaCpu(self.p, 2), id = self.p.g[2].Hand.get(m.pos);
+      // fascia media: la CPU nuova (js/cpu.js; Ashkar con la valutazione del Titano); base e avanzata: quella originale
+      var m = (self.av.cpu === 'nuova' || self.av.cpu === 'titano') && window.Cpu ? Cpu.mossa(self.p, 2, { titano: self.av.cpu === 'titano' })
+        : Motore.mossaCpu(self.p, 2), id = self.p.g[2].Hand.get(m.pos);
       self.mostraEntrata(id, m.azione === 'play' ? 'Opponent plays' : 'Opponent discards', m.azione === 'play' ? 1150 : 800, function () {
         if (self.chiuso) return;
         var r = self.p.usaCarta(2, m.azione, m.pos, m.modo);

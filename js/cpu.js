@@ -19,8 +19,19 @@
   var VITTORIA = 1e6;
   var CONF = { k: 4, pericolo: 400 };
 
+  // CPU del Titano (Ashkar): la collezione di parti DIVERSE in mano vale, e sempre di piu' man mano che si avvicina
+  // a cinque (Completion ritual con tutte le parti = vittoria immediata; Wicked ritual = 30 di danno per Titano diverso).
+  // Cosi' non le scarta e non le spende per altro: le usa per chiudere con uno dei due rituali.
+  var PARTI = [302, 303, 310, 311, 312], RITO = 315, RITO_NERO = 482;
+  var TITANO = { parte: 70, rito: 200, ritoNero: 25 };
+  function valoreTitano(mano) {
+    var v = mano.values().map(function (x) { return +x; }), k = 0;
+    PARTI.forEach(function (id) { if (v.indexOf(id) >= 0) k++; });
+    return TITANO.parte * k * k + (v.indexOf(RITO) >= 0 && k >= 3 ? TITANO.rito : 0) + (v.indexOf(RITO_NERO) >= 0 ? TITANO.ritoNero * k : 0);
+  }
+
   // passi = quante azioni dopo la mossa scelta e' finita la partita: vincere subito vale piu' che vincere dopo
-  function valuta(p, n, passi) {
+  function valuta(p, n, passi, titano) {
     if (p.stato !== 'in corso') return (p.vincitore === n ? VITTORIA : p.vincitore === 0 ? 0 : -VITTORIA) * (1 - 0.05 * (passi || 0));
     var io = p.g[n], lui = p.g[p.avversario(n)], cfg = p.cfg, v = 0;
     M.ATTR.forEach(function (a) { v += io[a] * PESI.io[a] - lui[a] * PESI.lui[a]; });
@@ -30,6 +41,7 @@
     v += CONF.pericolo * 30 / (suaDifesa + 10);
     // vittoria per costruzione: ogni piano in cima alla torre vale di piu'
     v += Math.pow(io.Tower / cfg.max_tower, 3) * 400 - Math.pow(lui.Tower / cfg.max_tower, 3) * 400;
+    if (titano) v += valoreTitano(io.Hand);
     return v;
   }
 
@@ -69,7 +81,7 @@
         while (q.stato === 'in corso' && q.corrente === o && sue < 3) {
           var m2 = M.mossaCpu(q, o, { seme: k * 17 + 9 + sue }); q.usaCarta(o, m2.azione, m2.pos, m2.modo); sue++; passi++;
         }
-        tot += valuta(q, n, passi);
+        tot += valuta(q, n, passi, opz.titano);
       }
       if (!ok) continue;
       var v = tot / K;
@@ -78,7 +90,7 @@
     return meglio || M.mossaCpu(p, n, opz);
   }
 
-  var Cpu = { mossa: mossa, valuta: valuta, CONF: CONF, PESI: PESI };
+  var Cpu = { mossa: mossa, valuta: valuta, CONF: CONF, PESI: PESI, TITANO: TITANO };
   if (typeof module !== 'undefined' && module.exports) module.exports = Cpu;
   else radice.Cpu = Cpu;
 })(typeof window !== 'undefined' ? window : globalThis);

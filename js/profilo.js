@@ -11,7 +11,7 @@
     vittoria: 30, sconfitta: 8, pareggio: 12,         // contro la CPU normale
     moltiplicaLunga: 1.5,                             // partita lunga
     sfide: { Grofgul: 90, Marquis: 100, Demetrios: 110, Sophie: 120, Myr: 130, Duroth: 150, Gilgamesh: 180 },
-    premioRivale: function (livello) { return 35 + 5 * livello; },   // rivali: da 40 a 85 monete a vittoria
+    premioMedio: 55,                                  // vittoria contro un rivale (fascia media)
     prezzoCarta: { C: 12, U: 30, R: 70 },
     prezzoSlot: function (slot) { return 100 + 50 * (slot - 1); },   // slot = quanti ne hai gia'
     prezzoSfida: function (nome) { return Math.round(avversario(nome).premio * 1.1); },
@@ -26,15 +26,21 @@
   };
 
   // ------------------------------------------------------------------ avversari
-  // Tre famiglie: il giullare (di serie, mazzo casuale), i rivali (dati/rivali.js: mazzi legali per tribu',
-  // si sbloccano in ordine di livello) e gli sfidanti dell'originale (mazzi e castelli speciali, fortissimi).
-  var GIULLARE = { nome: null, titolo: 'The Jester', tipo: 'giullare', avatar: 'giullare',
+  // Tre fasce (scelta di Luca, 3/10/2026), senza livelli dentro la fascia:
+  //  - BASE: il giullare (mazzo casuale) e i tre mazzi di partenza di MArcomage; sbloccati, CPU originale;
+  //  - MEDIA: i rivali per tribu' (dati/rivali.js, mazzi legali); si sbloccano nel negozio, CPU nuova (Ashkar: Titano);
+  //  - AVANZATA: gli sfidanti dell'originale (castelli e mazzi speciali, fortissimi), dopo tutta la fascia media.
+  var GIULLARE = { nome: null, titolo: 'The Jester', tipo: 'base', mazzoCasuale: true, avatar: 'giullare',
     descrizione: 'A wandering fool with a deck of random cards. Nobody knows what he will play next, not even him.' };
   function avversari() {
     var l = [Object.assign({ premio: ECONOMIA.vittoria }, GIULLARE)];
-    (window.RIVALI || []).slice().sort(function (a, b) { return a.livello - b.livello; }).forEach(function (r) {
+    (window.MAZZI_BASE || []).forEach(function (b) {
+      l.push({ nome: b.nome, titolo: b.titolo, tipo: 'base', avatar: b.nome.toLowerCase(), descrizione: b.descrizione,
+        mazzo: b.mazzo, premio: ECONOMIA.vittoria });
+    });
+    (window.RIVALI || []).forEach(function (r) {
       l.push({ nome: r.nome, titolo: r.titolo, tipo: 'rivale', avatar: r.nome.toLowerCase(), descrizione: r.descrizione,
-        tribu: r.tribu, livello: r.livello, cpu: r.cpu, mazzo: r.mazzo, premio: ECONOMIA.premioRivale(r.livello) });
+        tribu: r.tribu, cpu: r.cpu, mazzo: r.mazzo, premio: ECONOMIA.premioMedio });
     });
     (window.SFIDE || []).forEach(function (s) {
       l.push({ nome: s.nome, titolo: s.titolo, tipo: 'sfidante', avatar: s.nome.toLowerCase(), descrizione: s.descrizione,
@@ -187,9 +193,9 @@
       var ordine = { C: ['C', 'U', 'R'], U: ['U', 'R', 'C'], R: ['R', 'U', 'C'] }[r];
       for (var k = 0; k < 3; k++) { if (pool[ordine[k]].length) { carte.push(pool[ordine[k]].pop()); break; } }
     }
-    var chiusi = avversari().filter(function (a) { return a.nome && self.d.sfide.indexOf(a.nome) < 0; });
+    var chiusi = avversari().filter(function (a) { return a.tipo !== 'base' && self.d.sfide.indexOf(a.nome) < 0; });
     var rivali = chiusi.filter(function (a) { return a.tipo === 'rivale'; });
-    var bloccate = (rivali.length ? rivali.slice(0, 1) : chiusi).map(function (a) { return a.nome; });
+    var bloccate = (rivali.length ? rivali : chiusi).map(function (a) { return a.nome; });
     this.d.negozio = {
       carte: carte, vendute: [],
       booster: estraiTipi(e.boosterPerNegozio, caso), aperti: [],

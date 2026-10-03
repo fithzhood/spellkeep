@@ -33,7 +33,7 @@
       var st = d.stat;
       s.innerHTML = '<div class="marchio"><h1>SPELLKEEP</h1><p>Build your tower, break theirs. A single-player remake of MArcomage.</p>' +
         '<div class="stat"><span><b>' + st.vinte + '</b> won</span><span><b>' + st.perse + '</b> lost</span><span><b>' + d.collezione.length + '</b> cards</span>' +
-        '<span><b>' + d.sfide.length + '/' + (Avversari.tutti().length - 1) + '</b> opponents</span></div></div><nav></nav>' + this.cassa() +
+        '<span><b>' + d.sfide.length + '/' + Avversari.tutti().filter(function (a) { return a.tipo !== 'base'; }).length + '</b> opponents</span></div></div><nav></nav>' + this.cassa() +
         '<div class="build">build ' + BUILD + '</div>';
       var nav = s.querySelector('nav');
       function voce(testo, oro, fn) { var b = el('button', 'btn' + (oro ? ' oro' : ''), testo); b.addEventListener('click', fn); nav.appendChild(b); }
@@ -57,10 +57,10 @@
       s.querySelector('.indietro').addEventListener('click', function () { self.home(); });
       var lista = s.querySelector('.avversari');
       setTimeout(function () { UI.sfuma(lista); }, 0);
-      var voci = Avversari.tutti().map(function (a) { return Object.assign({ chiusa: !!a.nome && d.sfide.indexOf(a.nome) < 0 }, a); });
+      var voci = Avversari.tutti().map(function (a) { return Object.assign({ chiusa: a.tipo !== 'base' && d.sfide.indexOf(a.nome) < 0 }, a); });
       voci.forEach(function (v) {
         var b = el('div', 'avv pannello' + (v.chiusa ? ' chiuso' : '') + (self.sceltaAvv === v.nome ? ' su' : ''));
-        var tipo = v.tipo === 'rivale' ? 'Rival · ' + v.tribu : v.tipo === 'sfidante' ? 'Challenger' : 'Random deck';
+        var tipo = v.tipo === 'rivale' ? 'Medium · ' + v.tribu : v.tipo === 'sfidante' ? 'Advanced' : v.mazzoCasuale ? 'Basic · random deck' : 'Basic · starter deck';
         b.innerHTML = '<img src="' + avatar(v.nome) + '" alt=""><div class="nome">' + v.titolo + '</div><div class="tipo">' + tipo + '</div><div class="desc">' + v.descrizione + '</div>' +
           '<div class="premio">' + UI.moneta(v.premio) + '</div>';
         b.addEventListener('click', function () {
@@ -194,11 +194,11 @@
       if (n.sfida) {
         var sf = Avversari.trova(n.sfida), pz = pr.prezzoSfida(n.sfida);
         var va = el('div', 'voce pannello', '<img src="' + avatar(sf.nome) + '" alt=""><div class="t">' + sf.titolo + '</div><div class="s">' +
-          (sf.tipo === 'rivale' ? 'Rival · ' + sf.tribu : 'Challenger') + ' · wins pay ' + UI.moneta(sf.premio) + '</div>');
+          (sf.tipo === 'rivale' ? 'Medium · ' + sf.tribu : 'Advanced') + ' · wins pay ' + UI.moneta(sf.premio) + '</div>');
         var ba = el('button', 'btn' + (d.monete < pz ? ' spento' : ' oro'), 'Unlock · ' + UI.moneta(pz));
         ba.addEventListener('click', function () { self.compra(function () { return pr.compraSfida(); }, ba); });
         va.appendChild(ba); banco.appendChild(va);
-      } else if (d.sfide.length >= Avversari.tutti().length - 1) banco.appendChild(el('div', 'voce pannello', '<div class="t">Every opponent unlocked</div>'));
+      } else if (!Avversari.tutti().some(function (a) { return a.tipo !== 'base' && d.sfide.indexOf(a.nome) < 0; })) banco.appendChild(el('div', 'voce pannello', '<div class="t">Every opponent unlocked</div>'));
       banco.appendChild(el('div', 'vuoto-msg', 'New offers after every game.'));
     },
     compra: function (fn, bottone) {
