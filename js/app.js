@@ -42,6 +42,7 @@
       voce('Play', !d.partita, function () { self.preparazione(); });
       voce('Decks', false, function () { new Editor(self, d.mazzoAttivo); });
       voce('Shop', false, function () { self.negozio(); });
+      voce('Tutorial' + (Tutorial.fatte(self) ? ' <small>' + Tutorial.fatte(self) + '/' + Tutorial.lezioni.length + '</small>' : ''), false, function () { Tutorial.menu(self); });
       voce('Settings', false, function () { self.impostazioni(); });
       this.monta(s);
     },
@@ -55,22 +56,38 @@
         '<div class="corpo"><div class="preparazione"><div class="avversari"></div><div class="opzioni"></div></div></div>';
       this.monta(s);
       s.querySelector('.indietro').addEventListener('click', function () { self.home(); });
+      // caselle in una griglia che scorre in verticale, divise per fascia; la posizione di scorrimento resta fra un
+      // tocco e l'altro (prima la lista orizzontale ripartiva sempre dall'inizio)
       var lista = s.querySelector('.avversari');
-      setTimeout(function () { UI.sfuma(lista); }, 0);
       var voci = Avversari.tutti().map(function (a) { return Object.assign({ chiusa: a.tipo !== 'base' && d.sfide.indexOf(a.nome) < 0 }, a); });
-      voci.forEach(function (v) {
-        var b = el('div', 'avv pannello' + (v.chiusa ? ' chiuso' : '') + (self.sceltaAvv === v.nome ? ' su' : ''));
-        var tipo = v.tipo === 'rivale' ? 'Medium · ' + v.tribu : v.tipo === 'sfidante' ? 'Advanced' : v.mazzoCasuale ? 'Basic · random deck' : 'Basic · starter deck';
-        b.innerHTML = '<img src="' + avatar(v.nome) + '" alt=""><div class="nome">' + v.titolo + '</div><div class="tipo">' + tipo + '</div><div class="desc">' + v.descrizione + '</div>' +
-          '<div class="premio">' + UI.moneta(v.premio) + '</div>';
-        b.addEventListener('click', function () {
-          if (v.chiusa) { UI.avviso('Unlock this opponent in the shop'); UI.scuoti(b); return; }
-          self.preparazione(v.nome);
+      var FASCE = [['base', 'Basic'], ['rivale', 'Medium'], ['sfidante', 'Advanced']];
+      FASCE.forEach(function (f) {
+        var qui = voci.filter(function (v) { return v.tipo === f[0]; });
+        if (!qui.length) return;
+        var aperti = qui.filter(function (v) { return !v.chiusa; }).length;
+        lista.appendChild(el('div', 'fascia-t', f[1] + ' <small>' + aperti + '/' + qui.length + ' unlocked</small>'));
+        var g = el('div', 'caselle');
+        qui.forEach(function (v) {
+          var b = el('button', 'avv pannello' + (v.chiusa ? ' chiuso' : '') + (self.sceltaAvv === v.nome ? ' su' : ''));
+          var tipo = v.tipo === 'rivale' ? v.tribu : v.tipo === 'sfidante' ? 'Challenger' : v.mazzoCasuale ? 'Random deck' : 'Starter deck';
+          b.innerHTML = '<img src="' + avatar(v.nome) + '" alt=""><span class="t"><span class="nome">' + v.titolo + '</span>' +
+            '<span class="tipo">' + (v.chiusa ? '🔒 ' : '') + tipo + '</span><span class="premio">' + UI.moneta(v.premio) + '</span></span>';
+          b.addEventListener('click', function () {
+            if (v.chiusa) { UI.avviso('Unlock this opponent in the shop'); UI.scuoti(b); return; }
+            self.preparazione(v.nome);
+          });
+          g.appendChild(b);
         });
-        lista.appendChild(b);
+        lista.appendChild(g);
       });
+      lista.addEventListener('scroll', function () { self.scrollAvv = lista.scrollTop; });
+      if (this.scrollAvv) lista.scrollTop = this.scrollAvv;
+      else setTimeout(function () { var su = lista.querySelector('.avv.su'); if (su) su.scrollIntoView({ block: 'nearest' }); }, 0);
       var o = s.querySelector('.opzioni');
       var sf = this.sceltaAvv ? Avversari.trova(this.sceltaAvv).sfida : null;
+      var av = Avversari.trova(this.sceltaAvv);
+      o.appendChild(el('div', 'pannello scheda-avv', '<img src="' + avatar(av.nome) + '" alt=""><div><b>' + av.titolo + '</b>' +
+        '<p>' + av.descrizione + '</p><span class="premio">Win: ' + UI.moneta(av.premio) + '</span></div>'));
       var mz = el('div', 'pannello riga', '<span>Deck<small>' + (pr.mazzoValido() ? pr.mazzo().nome : 'The deck needs 15 cards per rarity') + '</small></span>');
       var sm = el('div', 'scegli-mazzo');
       d.mazzi.forEach(function (m, k) {
@@ -88,7 +105,7 @@
       interruttore('Hidden cards', 'The opponent\'s hand stays secret', 'nascoste');
       interruttore('Long game', 'Taller tower, more rounds, ×1.5 coins', 'lunga');
       if (sf) o.appendChild(el('div', 'pannello riga', '<span>Challenge rules<small>You can\'t play rare cards. The challenger starts with its own castle and deck.</small></span>'));
-      var via = el('button', 'btn oro' + (pr.mazzoValido() ? '' : ' spento'), 'Start');
+      var via = el('button', 'btn oro avvia' + (pr.mazzoValido() ? '' : ' spento'), 'Start');
       via.addEventListener('click', function () {
         if (!pr.mazzoValido()) { UI.avviso('Complete your deck first: 15 cards per rarity'); UI.scuoti(via); return; }
         self.nuovaPartita({ sfida: self.sceltaAvv });
@@ -120,6 +137,7 @@
     },
     salvaPartita: function (b) {
       var pr = this.profilo;
+      if (b.opz.tutorial) return;
       if (b.p.stato !== 'in corso') return;
       pr.d.partita = { stato: b.p.esporta(), sfida: b.opz.sfida, titolo: b.opz.titolo, rivincita: b.opz.rivincita };
       pr.salva();

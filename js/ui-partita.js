@@ -24,6 +24,8 @@
     this.aggiorna();
     var self = this;
     var parti = function () { if (self.p.stato !== 'in corso') self.finale(); else if (self.p.corrente === 2) self.turnoCpu(); };
+    // tutorial: il copione decide tutto (niente CPU, niente fine partita)
+    if (opz.tutorial) return;
     // partita nuova: prima i due ritratti, poi si gioca
     if (opz.nuova && this.p.stato === 'in corso') this.presentazione(parti); else parti();
   }
@@ -291,6 +293,7 @@
     this.mostraEntrata(id, azione === 'play' ? 'You play' : 'You discard', 520, function () {
       var r = self.p.usaCarta(1, azione, pos, modo);
       if (r.errore) { UI.avviso(r.errore); self.bloccato = false; self.aggiorna(); return; }
+      if (self.opz.tutorial) { self.bloccato = false; return self.opz.tutorial.mossa(self, r, id); }
       self.app.salvaPartita(self);
       self.aggiorna();
       self.scatti(r.segnalini, id, 1, function () {
@@ -339,6 +342,7 @@
   // ------------------------------------------------------------------ pausa e fine
   Battaglia.prototype.pausa = function () {
     var self = this;
+    if (this.opz.tutorial) return this.opz.tutorial.esci();
     var f = el('div', 'finale'), r = el('div', 'riquadro pannello');
     r.innerHTML = '<h2>Paused</h2><p>' + (this.opz.titolo || 'The Jester') + ' · Round ' + this.p.round +
       (this.p.nascoste ? ' · hidden cards' : ' · open cards') + (this.p.lunga ? ' · long game' : '') + '</p>';
