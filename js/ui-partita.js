@@ -382,7 +382,7 @@
     if (bonus.length) {
       var lb = el('div', 'bonus-fine');
       bonus.forEach(function (b) {
-        lb.appendChild(el('div', 'bonus-riga', '<span>🏆 ' + b.testo + '</span><b>+ ' + UI.moneta(b.monete) + (b.booster ? ' + ' + b.booster + (b.comune ? ' booster' : ' rare booster') + (b.booster > 1 ? 's' : '') : '') + '</b>'));
+        lb.appendChild(el('div', 'bonus-riga', '<span>🏆 ' + b.testo + '</span><b>' + (b.monete ? '+ ' + UI.moneta(b.monete) : '') + (b.booster ? (b.tipo ? (b.monete ? ' + ' : '+ ') + Booster.tipo(b.tipo).nome + ' booster' : ' + ' + b.booster + ' rare booster' + (b.booster > 1 ? 's' : '')) : '') + '</b>'));
       });
       sinistra.appendChild(lb);
     }

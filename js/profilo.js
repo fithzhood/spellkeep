@@ -26,6 +26,7 @@
     // traguardi (richiesta di Luca, 4/10, "sii generoso"): prima vittoria contro un avversario = il doppio della sua
     // vincita in piu' e un booster in regalo; fascia completata e tutti battuti = monete e booster rari in regalo
     primaVittoria: { moltiplica: 2, booster: 1 },
+    boosterOgni: 10,                                  // e il suo booster preferito alla 10a, 20a, 30a vittoria...
     fascia: { base: { monete: 300, booster: 2 }, rivale: { monete: 1500, booster: 3 }, sfidante: { monete: 2500, booster: 3 } },
     tutti: { monete: 5000, booster: 5 }
   };
@@ -56,6 +57,27 @@
   }
   function avversario(nome) {
     return avversari().filter(function (a) { return a.nome === (nome || null); })[0] || avversari()[0];
+  }
+
+  // il booster preferito di un avversario: la tribu' per i rivali; per gli altri la keyword piu' presente nel mazzo
+  // (fra quelle che hanno un booster), o il colore di costo piu' presente. Il giullare gioca a caso: un tipo a caso.
+  function boosterPreferito(nome) {
+    var a = avversario(nome), id;
+    if (a.tribu) { id = 'kw-' + a.tribu.toLowerCase().replace(/ /g, '_'); if (tipoBooster(id)) return id; }
+    var mazzo = a.mazzo || (a.sfida && a.sfida.mazzo);
+    if (!mazzo) return null;                       // il giullare: un tipo a caso quando lo si vince
+    var kw = {}, col = {};
+    ['C', 'U', 'R'].forEach(function (r) {
+      (mazzo[r] || []).forEach(function (cid) {
+        var d = Motore.catalogo.perId[cid]; if (!d) return;
+        d.keyword.map(nomeKw).forEach(function (k) { if (tipoBooster('kw-' + k.toLowerCase().replace(/ /g, '_'))) kw[k] = (kw[k] || 0) + 1; });
+        var c = tipoCosto(d); col[c] = (col[c] || 0) + 1;
+      });
+    });
+    var migliore = Object.keys(kw).sort(function (x, y) { return kw[y] - kw[x]; })[0];
+    if (migliore) return 'kw-' + migliore.toLowerCase().replace(/ /g, '_');
+    var c = Object.keys(col).sort(function (x, y) { return col[y] - col[x]; })[0];
+    return c ? 'col-' + c : null;
   }
 
   function Profilo(dati) { this.d = dati; }
@@ -182,6 +204,8 @@
   // chiave di un avversario nelle statistiche (il giullare non ha nome)
   function chiaveAvv(nome) { return nome || 'Jester'; }
   Profilo.prototype.battuto = function (nome) { return (this.d.stat.sfideVinte[chiaveAvv(nome)] || 0); };
+  // a quale vittoria arriva il prossimo booster preferito (1, poi 10, 20, 30...)
+  Profilo.prototype.prossimoBooster = function (nome) { var n = this.battuto(nome); return n < 1 ? 1 : (Math.floor(n / ECONOMIA.boosterOgni) + 1) * ECONOMIA.boosterOgni; };
   // per fascia: quanti battuti su quanti, e se il premio e' gia' stato dato
   Profilo.prototype.fasce = function () {
     var self = this, r = {};
@@ -200,7 +224,11 @@
     if (prima) {
       var m = avversario(nome).premio * e.primaVittoria.moltiplica;
       if (lunga) m = Math.round(m * e.moltiplicaLunga);
-      bonus.push({ testo: 'First victory against ' + avversario(nome).titolo, monete: m, booster: e.primaVittoria.booster, comune: true });
+      bonus.push({ testo: 'First victory against ' + avversario(nome).titolo, monete: m, booster: e.primaVittoria.booster, tipo: boosterPreferito(nome) || estraiTipi(1)[0] });
+    } else {
+      // e poi un booster preferito ogni 10 vittorie contro lo stesso avversario (10a, 20a, 30a...)
+      var n = this.battuto(nome);
+      if (n > 0 && n % e.boosterOgni === 0) bonus.push({ testo: n + 'th victory against ' + avversario(nome).titolo, monete: 0, booster: 1, tipo: boosterPreferito(nome) || estraiTipi(1)[0] });
     }
     var fasce = this.fasce(), tutte = true;
     Object.keys(fasce).forEach(function (k) {
@@ -216,7 +244,7 @@
     }
     bonus.forEach(function (b) {
       self.d.monete += b.monete;
-      for (var i = 0; i < b.booster; i++) self.d.regali.push(b.comune ? estraiTipi(1)[0] : 'raro');
+      for (var i = 0; i < b.booster; i++) self.d.regali.push(b.tipo || 'raro');
     });
     return bonus;
   };
@@ -350,5 +378,5 @@
   radice.Profilo = Profilo;
   radice.ECONOMIA = ECONOMIA;
   radice.Avversari = { tutti: avversari, trova: avversario };
-  radice.Booster = { tipi: tipiBooster, tipo: tipoBooster, estraiTipi: estraiTipi, estraiCarte: estraiCarte, tipoCosto: tipoCosto, conta: contaBooster };
+  radice.Booster = { tipi: tipiBooster, tipo: tipoBooster, estraiTipi: estraiTipi, estraiCarte: estraiCarte, tipoCosto: tipoCosto, conta: contaBooster, preferito: boosterPreferito };
 })(window);

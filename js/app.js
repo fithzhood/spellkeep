@@ -11,6 +11,7 @@
   var SFIDE = window.SFIDE || [];
   function sfida(nome) { return SFIDE.find(function (s) { return s.nome === nome; }); }
   // i ritratti (arte/avatar/prompt.json, fatti con Gemini): avversari img/avatar/<nome>.jpg e il giocatore giocatore.jpg
+  function nomeBooster(nome) { var t = Booster.preferito(nome); return t ? Booster.tipo(t).nome : 'random'; }
   function avatar(nome) { return 'img/avatar/' + (nome === 'giocatore' ? 'giocatore' : Avversari.trova(nome).avatar) + '.jpg'; }
 
   var App = {
@@ -93,7 +94,8 @@
       o.appendChild(el('div', 'pannello scheda-avv', '<img src="' + avatar(av.nome) + '" alt=""><div><b>' + av.titolo + '</b>' +
         '<p>' + av.descrizione + '</p>' + (sf ? '<p class="regole">Challenge: no rare cards; own castle and deck.</p>' : '') +
         '<span class="premio">Win: ' + UI.moneta(av.premio) +
-        (pr.battuto(av.nome) ? ' · beaten ' + pr.battuto(av.nome) + '×' : ' · <b class="primo">first win + ' + UI.moneta(av.premio * 2) + ' & booster</b>') + '</span></div>'));
+        (pr.battuto(av.nome) ? ' · beaten ' + pr.battuto(av.nome) + '× · <b class="primo">' + nomeBooster(av.nome) + ' booster at win ' + pr.prossimoBooster(av.nome) + '</b>'
+          : ' · <b class="primo">first win + ' + UI.moneta(av.premio * 2) + ' & ' + nomeBooster(av.nome) + ' booster</b>') + '</span></div>'));
       var mz = el('div', 'pannello riga', '<span>Deck<small>' + (pr.mazzoValido() ? pr.mazzo().nome : 'Incomplete deck') + '</small></span>');
       var sm = el('div', 'scegli-mazzo');
       d.mazzi.forEach(function (m, k) {
