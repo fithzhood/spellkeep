@@ -11,9 +11,10 @@
     vittoria: 30, sconfitta: 8, pareggio: 12,         // contro la CPU normale
     moltiplicaLunga: 1.5,                             // partita lunga
     sfide: { Grofgul: 90, Marquis: 100, Demetrios: 110, Sophie: 120, Myr: 130, Duroth: 150, Gilgamesh: 180 },
+    premioRivale: function (livello) { return 35 + 5 * livello; },   // rivali: da 40 a 85 monete a vittoria
     prezzoCarta: { C: 12, U: 30, R: 70 },
     prezzoSlot: function (slot) { return 100 + 50 * (slot - 1); },   // slot = quanti ne hai gia'
-    prezzoSfida: function (nome) { return Math.round((ECONOMIA.sfide[nome] || 100) * 1.1); },
+    prezzoSfida: function (nome) { return Math.round(avversario(nome).premio * 1.1); },
     cartePerNegozio: 5,
     probRarita: { C: 65, U: 29, R: 6 },              // come la pescata dal mazzo
     slotPartenza: 1, slotMassimi: 8,
@@ -23,6 +24,27 @@
     probBoosterRaro: 0.05,                            // per ogni posto: quanto spesso esce il booster raro
     rivendita: { C: 4, U: 10, R: 25 }                 // una carta doppia trovata in un booster si rivende da sola
   };
+
+  // ------------------------------------------------------------------ avversari
+  // Tre famiglie: il giullare (di serie, mazzo casuale), i rivali (dati/rivali.js: mazzi legali per tribu',
+  // si sbloccano in ordine di livello) e gli sfidanti dell'originale (mazzi e castelli speciali, fortissimi).
+  var GIULLARE = { nome: null, titolo: 'The Jester', tipo: 'giullare', avatar: 'giullare',
+    descrizione: 'A wandering fool with a deck of random cards. Nobody knows what he will play next, not even him.' };
+  function avversari() {
+    var l = [Object.assign({ premio: ECONOMIA.vittoria }, GIULLARE)];
+    (window.RIVALI || []).slice().sort(function (a, b) { return a.livello - b.livello; }).forEach(function (r) {
+      l.push({ nome: r.nome, titolo: r.titolo, tipo: 'rivale', avatar: r.nome.toLowerCase(), descrizione: r.descrizione,
+        tribu: r.tribu, livello: r.livello, cpu: r.cpu, mazzo: r.mazzo, premio: ECONOMIA.premioRivale(r.livello) });
+    });
+    (window.SFIDE || []).forEach(function (s) {
+      l.push({ nome: s.nome, titolo: s.titolo, tipo: 'sfidante', avatar: s.nome.toLowerCase(), descrizione: s.descrizione,
+        sfida: s, premio: ECONOMIA.sfide[s.nome] || 100 });
+    });
+    return l;
+  }
+  function avversario(nome) {
+    return avversari().filter(function (a) { return a.nome === (nome || null); })[0] || avversari()[0];
+  }
 
   function Profilo(dati) { this.d = dati; }
 
@@ -135,7 +157,7 @@
   // esito: 1 vinta, 2 persa, 0 pari. Restituisce le monete guadagnate.
   Profilo.prototype.registraPartita = function (esito, opz) {
     var e = ECONOMIA, premio;
-    if (opz.sfida) premio = esito === 1 ? e.sfide[opz.sfida] || 100 : esito === 0 ? e.pareggio : e.sconfitta;
+    if (opz.sfida) premio = esito === 1 ? avversario(opz.sfida).premio : esito === 0 ? e.pareggio : e.sconfitta;
     else premio = esito === 1 ? e.vittoria : esito === 0 ? e.pareggio : e.sconfitta;
     if (opz.lunga) premio = Math.round(premio * e.moltiplicaLunga);
     this.d.monete += premio;
@@ -165,7 +187,9 @@
       var ordine = { C: ['C', 'U', 'R'], U: ['U', 'R', 'C'], R: ['R', 'U', 'C'] }[r];
       for (var k = 0; k < 3; k++) { if (pool[ordine[k]].length) { carte.push(pool[ordine[k]].pop()); break; } }
     }
-    var bloccate = (window.SFIDE || []).map(function (s) { return s.nome; }).filter(function (n) { return self.d.sfide.indexOf(n) < 0; });
+    var chiusi = avversari().filter(function (a) { return a.nome && self.d.sfide.indexOf(a.nome) < 0; });
+    var rivali = chiusi.filter(function (a) { return a.tipo === 'rivale'; });
+    var bloccate = (rivali.length ? rivali.slice(0, 1) : chiusi).map(function (a) { return a.nome; });
     this.d.negozio = {
       carte: carte, vendute: [],
       booster: estraiTipi(e.boosterPerNegozio, caso), aperti: [],
@@ -250,5 +274,6 @@
 
   radice.Profilo = Profilo;
   radice.ECONOMIA = ECONOMIA;
+  radice.Avversari = { tutti: avversari, trova: avversario };
   radice.Booster = { tipi: tipiBooster, tipo: tipoBooster, estraiTipi: estraiTipi, estraiCarte: estraiCarte, tipoCosto: tipoCosto };
 })(window);

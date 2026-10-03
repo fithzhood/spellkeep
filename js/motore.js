@@ -786,7 +786,7 @@
     mine: { Quarry: 80, Magic: 120, Dungeons: 100, Bricks: 4, Gems: 6, Recruits: 5, Tower: 7.5, Wall: 5 },
     his: { Quarry: 96, Magic: 144, Dungeons: 120, Bricks: 4.8, Gems: 7.2, Recruits: 6, Tower: 9, Wall: 6 }
   };
-  var VARIE = { play_again: 300, summon: 150, discard: 250, cleanup: 50, poison: 50 };
+  var VARIE_BASE = { play_again: 300, summon: 150, discard: 250, cleanup: 50, poison: 50 };
   function pesi(partita, n, statici) {
     var cfg = partita.cfg, io = partita.g[n], lui = partita.g[partita.avversario(n)];
     var fac = function (x) { return Math.min(2.5, (6 / Math.pow(x, 2)) + 0.6); };
@@ -806,7 +806,8 @@
   // restituisce { azione: 'play'|'discard', pos, modo }
   function mossaCpu(partita, n, opz) {
     opz = opz || {};
-    var statici = (partita.sfida && partita.sfida.pesi && n === 2) ? partita.sfida.pesi : PESI_BASE;
+    var statici = opz.pesi || ((partita.sfida && partita.sfida.pesi && n === 2) ? partita.sfida.pesi : PESI_BASE);
+    var VARIE = opz.varie || VARIE_BASE;
     var io = partita.g[n], lui = partita.g[partita.avversario(n)];
     var aIo = {}, aLui = {};
     ATTR.forEach(function (a) { aIo[a] = io[a]; aLui[a] = lui[a]; });
@@ -914,7 +915,7 @@
   var Motore = {
     PArr: PArr, Caso: Caso, Partita: Partita, mossaCpu: mossaCpu, carta: carta, caricaCarte: caricaCarte,
     caricaKeyword: caricaKeyword, getList: getList, segnaliniAuto: segnaliniAuto, mazzoCasuale: mazzoCasuale,
-    CONFIG: CONFIG, SEGNALINI: SEGNALINI, ATTR: ATTR, catalogo: CATALOGO
+    CONFIG: CONFIG, SEGNALINI: SEGNALINI, ATTR: ATTR, catalogo: CATALOGO, PESI_BASE: PESI_BASE, VARIE_BASE: VARIE_BASE
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = Motore;
   else radice.Motore = Motore;

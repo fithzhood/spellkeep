@@ -10,7 +10,8 @@
   Motore.caricaKeyword(window.KEYWORD);
   var SFIDE = window.SFIDE || [];
   function sfida(nome) { return SFIDE.find(function (s) { return s.nome === nome; }); }
-  function avatar(nome) { return 'img/avatar/' + (nome ? nome.toLowerCase() : 'ai') + '.png'; }
+  // i ritratti (arte/avatar/prompt.json, fatti con Gemini): avversari img/avatar/<nome>.jpg e il giocatore giocatore.jpg
+  function avatar(nome) { return 'img/avatar/' + (nome === 'giocatore' ? 'giocatore' : Avversari.trova(nome).avatar) + '.jpg'; }
 
   var App = {
     profilo: Profilo.carica(),
@@ -32,7 +33,7 @@
       var st = d.stat;
       s.innerHTML = '<div class="marchio"><h1>SPELLKEEP</h1><p>Build your tower, break theirs. A single-player remake of MArcomage.</p>' +
         '<div class="stat"><span><b>' + st.vinte + '</b> won</span><span><b>' + st.perse + '</b> lost</span><span><b>' + d.collezione.length + '</b> cards</span>' +
-        '<span><b>' + d.sfide.length + '/' + SFIDE.length + '</b> challengers</span></div></div><nav></nav>' + this.cassa() +
+        '<span><b>' + d.sfide.length + '/' + (Avversari.tutti().length - 1) + '</b> opponents</span></div></div><nav></nav>' + this.cassa() +
         '<div class="build">build ' + BUILD + '</div>';
       var nav = s.querySelector('nav');
       function voce(testo, oro, fn) { var b = el('button', 'btn' + (oro ? ' oro' : ''), testo); b.addEventListener('click', fn); nav.appendChild(b); }
@@ -56,20 +57,20 @@
       s.querySelector('.indietro').addEventListener('click', function () { self.home(); });
       var lista = s.querySelector('.avversari');
       setTimeout(function () { UI.sfuma(lista); }, 0);
-      var voci = [{ nome: null, titolo: 'Standard opponent', descrizione: 'A computer player with a random deck. Plays by the original MArcomage AI.', premio: ECONOMIA.vittoria }]
-        .concat(SFIDE.map(function (x) { return { nome: x.nome, titolo: x.titolo, descrizione: x.descrizione, premio: ECONOMIA.sfide[x.nome] || 100, chiusa: d.sfide.indexOf(x.nome) < 0 }; }));
+      var voci = Avversari.tutti().map(function (a) { return Object.assign({ chiusa: !!a.nome && d.sfide.indexOf(a.nome) < 0 }, a); });
       voci.forEach(function (v) {
         var b = el('div', 'avv pannello' + (v.chiusa ? ' chiuso' : '') + (self.sceltaAvv === v.nome ? ' su' : ''));
-        b.innerHTML = '<img src="' + avatar(v.nome) + '" alt=""><div class="nome">' + v.titolo + '</div><div class="desc">' + v.descrizione + '</div>' +
+        var tipo = v.tipo === 'rivale' ? 'Rival · ' + v.tribu : v.tipo === 'sfidante' ? 'Challenger' : 'Random deck';
+        b.innerHTML = '<img src="' + avatar(v.nome) + '" alt=""><div class="nome">' + v.titolo + '</div><div class="tipo">' + tipo + '</div><div class="desc">' + v.descrizione + '</div>' +
           '<div class="premio">' + UI.moneta(v.premio) + '</div>';
         b.addEventListener('click', function () {
-          if (v.chiusa) { UI.avviso('Unlock this challenger in the shop'); UI.scuoti(b); return; }
+          if (v.chiusa) { UI.avviso('Unlock this opponent in the shop'); UI.scuoti(b); return; }
           self.preparazione(v.nome);
         });
         lista.appendChild(b);
       });
       var o = s.querySelector('.opzioni');
-      var sf = this.sceltaAvv ? sfida(this.sceltaAvv) : null;
+      var sf = this.sceltaAvv ? Avversari.trova(this.sceltaAvv).sfida : null;
       var mz = el('div', 'pannello riga', '<span>Deck<small>' + (pr.mazzoValido() ? pr.mazzo().nome : 'The deck needs 15 cards per rarity') + '</small></span>');
       var sm = el('div', 'scegli-mazzo');
       d.mazzi.forEach(function (m, k) {
@@ -99,14 +100,15 @@
       var pr = this.profilo, d = pr.d;
       conf = conf || { sfida: null };
       if (!pr.mazzoValido()) { UI.avviso('Your deck is incomplete'); return this.preparazione(); }
-      var sf = conf.sfida ? sfida(conf.sfida) : null;
+      var av = Avversari.trova(conf.sfida), sf = av.sfida || null;
       var caso = new Motore.Caso((Date.now() ^ (Math.random() * 1e9)) >>> 0);
-      var mio = pr.mazzo(), suo = sf ? { C: sf.mazzo.C, U: sf.mazzo.U, R: sf.mazzo.R, segnalini: sf.segnalini } : Motore.mazzoCasuale(caso);
+      var mio = pr.mazzo(), suo = sf ? { C: sf.mazzo.C, U: sf.mazzo.U, R: sf.mazzo.R, segnalini: sf.segnalini }
+        : av.mazzo ? { C: av.mazzo.C, U: av.mazzo.U, R: av.mazzo.R, segnalini: av.mazzo.segnalini } : Motore.mazzoCasuale(caso);
       var p = new Motore.Partita({
         mazzi: [{ C: mio.C, U: mio.U, R: mio.R, segnalini: mio.segnalini }, suo],
         nascoste: d.imp.nascoste, lunga: d.imp.lunga, sfida: sf, seme: caso.intero(1, 2147483646)
       });
-      this.avvia({ partita: p, sfida: conf.sfida, titolo: sf ? sf.titolo : 'Standard opponent', rivincita: conf });
+      this.avvia({ partita: p, sfida: conf.sfida, titolo: av.titolo, rivincita: conf, nuova: true });
     },
     avvia: function (opz) {
       this.battaglia = null;
@@ -123,7 +125,7 @@
       var sp = this.profilo.d.partita;
       try {
         var p = Motore.Partita.importa(sp.stato);
-        if (sp.sfida) p.sfida = sfida(sp.sfida);
+        if (sp.sfida && Avversari.trova(sp.sfida).sfida) p.sfida = Avversari.trova(sp.sfida).sfida;
         this.battaglia = new Battaglia(this, { partita: p, sfida: sp.sfida, titolo: sp.titolo, rivincita: sp.rivincita });
       } catch (e) {
         console.error(e);
@@ -190,12 +192,13 @@
       vs.appendChild(bs); banco.appendChild(vs);
       // avversario da sbloccare
       if (n.sfida) {
-        var sf = sfida(n.sfida), pz = pr.prezzoSfida(n.sfida);
-        var va = el('div', 'voce pannello', '<img src="' + avatar(sf.nome) + '" alt=""><div class="t">' + sf.titolo + '</div><div class="s">Challenger · wins pay ' + UI.moneta(ECONOMIA.sfide[sf.nome] || 100) + '</div>');
+        var sf = Avversari.trova(n.sfida), pz = pr.prezzoSfida(n.sfida);
+        var va = el('div', 'voce pannello', '<img src="' + avatar(sf.nome) + '" alt=""><div class="t">' + sf.titolo + '</div><div class="s">' +
+          (sf.tipo === 'rivale' ? 'Rival · ' + sf.tribu : 'Challenger') + ' · wins pay ' + UI.moneta(sf.premio) + '</div>');
         var ba = el('button', 'btn' + (d.monete < pz ? ' spento' : ' oro'), 'Unlock · ' + UI.moneta(pz));
         ba.addEventListener('click', function () { self.compra(function () { return pr.compraSfida(); }, ba); });
         va.appendChild(ba); banco.appendChild(va);
-      } else if (d.sfide.length >= SFIDE.length) banco.appendChild(el('div', 'voce pannello', '<div class="t">Every challenger unlocked</div>'));
+      } else if (d.sfide.length >= Avversari.tutti().length - 1) banco.appendChild(el('div', 'voce pannello', '<div class="t">Every opponent unlocked</div>'));
       banco.appendChild(el('div', 'vuoto-msg', 'New offers after every game.'));
     },
     compra: function (fn, bottone) {
@@ -231,6 +234,7 @@
     }
   };
 
+  App.avatar = avatar;
   window.App = App;
   if (App.profilo.d.partita) App.riprendi(); else App.home();
 })();

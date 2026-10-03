@@ -19,11 +19,35 @@
     this.sel = 0; this.modo = 0; this.selLui = 0;
     this.bloccato = false; this.manoVista = null;
     this.costruisci();
-    if (window.Musica) Musica.scena(opz.sfida ? 'sfida' : 'partita');
+    this.av = Avversari.trova(opz.sfida);
+    if (window.Musica) Musica.scena(this.av.tipo === 'sfidante' ? 'sfida' : 'partita');
     this.aggiorna();
-    if (this.p.stato !== 'in corso') this.finale();
-    else if (this.p.corrente === 2) this.turnoCpu();
+    var self = this;
+    var parti = function () { if (self.p.stato !== 'in corso') self.finale(); else if (self.p.corrente === 2) self.turnoCpu(); };
+    // partita nuova: prima i due ritratti, poi si gioca
+    if (opz.nuova && this.p.stato === 'in corso') this.presentazione(parti); else parti();
   }
+
+  function tipoAvv(av) { return av.tipo === 'rivale' ? 'Rival · ' + av.tribu : av.tipo === 'sfidante' ? 'Challenger' : 'Random deck'; }
+  function volto(app, chi, nome, sotto, cls) {
+    return '<div class="volto ' + (cls || '') + '"><img src="' + app.avatar(chi) + '" alt=""><b>' + nome + '</b>' + (sotto ? '<small>' + sotto + '</small>' : '') + '</div>';
+  }
+
+  // inizio partita: tu contro lui, con chi comincia. Sparisce da sola o con un tocco.
+  Battaglia.prototype.presentazione = function (poi) {
+    var self = this, pr = this.app.profilo;
+    var f = el('div', 'presenta');
+    f.innerHTML = volto(this.app, 'giocatore', 'You', pr.mazzo().nome, 'io') + '<div class="pr-vs">VS</div>' +
+      volto(this.app, this.av.nome, this.av.titolo, tipoAvv(this.av), 'lui') +
+      '<div class="pr-sotto">' + (this.p.corrente === 1 ? 'You go first' : this.av.titolo + ' goes first') + ' · tap to start</div>';
+    document.body.appendChild(f);
+    var chiusa = false, chiudi = function () {
+      if (chiusa) return; chiusa = true;
+      f.classList.add('via'); setTimeout(function () { f.remove(); if (!self.chiuso) poi(); }, 280);
+    };
+    f.addEventListener('click', chiudi);
+    setTimeout(chiudi, 2600);
+  };
 
   Battaglia.prototype.costruisci = function () {
     var s = el('div', 'schermo gioco');
@@ -265,7 +289,8 @@
     this.aggiorna();
     setTimeout(function () {
       if (self.chiuso) return;
-      var m = Motore.mossaCpu(self.p, 2), id = self.p.g[2].Hand.get(m.pos);
+      // rivali dal livello 6: la CPU nuova (js/cpu.js); tutti gli altri: quella originale di MArcomage
+      var m = self.av.cpu === 'nuova' && window.Cpu ? Cpu.mossa(self.p, 2) : Motore.mossaCpu(self.p, 2), id = self.p.g[2].Hand.get(m.pos);
       self.mostraEntrata(id, m.azione === 'play' ? 'Opponent plays' : 'Opponent discards', m.azione === 'play' ? 1150 : 800, function () {
         if (self.chiuso) return;
         var r = self.p.usaCarta(2, m.azione, m.pos, m.modo);
@@ -283,7 +308,7 @@
   Battaglia.prototype.pausa = function () {
     var self = this;
     var f = el('div', 'finale'), r = el('div', 'riquadro pannello');
-    r.innerHTML = '<h2>Paused</h2><p>' + (this.opz.titolo || 'Standard opponent') + ' · Round ' + this.p.round +
+    r.innerHTML = '<h2>Paused</h2><p>' + (this.opz.titolo || 'The Jester') + ' · Round ' + this.p.round +
       (this.p.nascoste ? ' · hidden cards' : ' · open cards') + (this.p.lunga ? ' · long game' : '') + '</p>';
     var az = el('div', 'azioni');
     var riprendi = el('button', 'btn oro', 'Resume'), casa = el('button', 'btn', 'Home'), resa = el('button', 'btn', 'Surrender');
@@ -304,11 +329,15 @@
     this.bloccato = true;
     var self = this, p = this.p, v = p.vincitore;
     var esito = v === 1 ? 1 : v === 2 ? 2 : 0;
-    if (window.Musica) Musica.congedo(esito === 1 ? 'vittoria' : esito === 2 ? (this.opz.sfida ? 'sconfitta-sfida' : 'sconfitta') : null);
+    if (window.Musica) Musica.congedo(esito === 1 ? 'vittoria' : esito === 2 ? (this.av.tipo === 'sfidante' ? 'sconfitta-sfida' : 'sconfitta') : null);
     var premio = this.app.profilo.registraPartita(esito, { sfida: this.opz.sfida, lunga: p.lunga });
     var f = el('div', 'finale'), r = el('div', 'riquadro pannello');
     var testo = p.esito === 'Surrender' ? 'You surrendered.' : (ESITI[p.esito] || ESITI.Draw)[esito === 2 ? 1 : 0];
-    r.innerHTML = '<h2 class="' + (esito === 1 ? 'vinta' : esito === 2 ? 'persa' : '') + '">' + (esito === 1 ? 'Victory' : esito === 2 ? 'Defeat' : 'Draw') + '</h2>' +
+    // i due ritratti: chi vince con l'anello d'oro, chi perde spento
+    // (ai lati del titolo, per stare nell'altezza del telefono in orizzontale anche con i booster del premio)
+    r.innerHTML = '<div class="volti">' + volto(this.app, 'giocatore', 'You', '', esito === 1 ? 'vince' : esito === 2 ? 'perde' : '') +
+      '<h2 class="' + (esito === 1 ? 'vinta' : esito === 2 ? 'persa' : '') + '">' + (esito === 1 ? 'Victory' : esito === 2 ? 'Defeat' : 'Draw') + '</h2>' +
+      volto(this.app, this.av.nome, this.av.titolo, '', esito === 2 ? 'vince' : esito === 1 ? 'perde' : '') + '</div>' +
       '<p>' + testo + ' · ' + p.round + (p.round === 1 ? ' round' : ' rounds') + '</p><div class="premio">+ ' + UI.moneta(premio) + '</div>';
     // vittoria: tre booster, se ne apre uno. Chi esce senza sceglierlo lo ritrova nella home.
     if (esito === 1 && this.app.profilo.d.premio) {
