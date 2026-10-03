@@ -850,3 +850,24 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .premi-sx { display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex: 1 1 0; min-width: 0; }
 .premi-fila .scelta-premio { flex: none; }
 .riquadro.largo .premi-sx .regalo-fine { align-self: center; }
+/* scelta avversario: le due opzioni affiancate, niente scorrimento ne' Start appiccicato sopra le righe */
+.preparazione .opzioni { overflow-y: visible; gap: 6px; }
+.preparazione .opzioni .avvia { position: static; }
+.opzioni-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: none; }
+.opzioni-fila .riga { padding: 5px 7px; gap: 4px; min-width: 0; }
+.opzioni-fila .riga span:first-child { font-size: .7rem; min-width: 0; text-align: left; }
+.opzioni-fila .riga small { font-size: .54rem; }
+.opzioni-fila .interruttore { flex: none; }
+.scheda-avv p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.scheda-avv p.regole { color: var(--oro); -webkit-line-clamp: 2; }
+.preparazione { grid-template-columns: minmax(0, 1fr) 300px; }
+.scheda-avv { padding: 6px 8px; gap: 8px; }
+.scheda-avv img { width: 48px; height: 48px; }
+.scheda-avv b { font-size: .7rem; }
+.scheda-avv p { -webkit-line-clamp: 2; margin: 1px 0 2px; }
+.scheda-avv p.regole { -webkit-line-clamp: 1; }
+.scheda-avv .premio { font-size: .6rem; }
+.preparazione .opzioni > .riga { min-height: 44px; padding: 4px 10px; }
+.opzioni-fila .riga { min-height: 44px; }
+.opzioni-fila .riga span:first-child { white-space: nowrap; }
+.scheda-avv .premio b.primo { display: inline; font-family: var(--testo); font-size: inherit; letter-spacing: 0; text-transform: none; line-height: inherit; }

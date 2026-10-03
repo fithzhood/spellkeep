@@ -91,9 +91,10 @@
       var sf = this.sceltaAvv ? Avversari.trova(this.sceltaAvv).sfida : null;
       var av = Avversari.trova(this.sceltaAvv);
       o.appendChild(el('div', 'pannello scheda-avv', '<img src="' + avatar(av.nome) + '" alt=""><div><b>' + av.titolo + '</b>' +
-        '<p>' + av.descrizione + '</p><span class="premio">Win: ' + UI.moneta(av.premio) +
-        (pr.battuto(av.nome) ? ' · beaten ' + pr.battuto(av.nome) + '×' : ' · <b class="primo">first win: + ' + UI.moneta(av.premio * 2) + ' and a booster</b>') + '</span></div>'));
-      var mz = el('div', 'pannello riga', '<span>Deck<small>' + (pr.mazzoValido() ? pr.mazzo().nome : 'The deck needs 15 cards per rarity') + '</small></span>');
+        '<p>' + av.descrizione + '</p>' + (sf ? '<p class="regole">Challenge: no rare cards; own castle and deck.</p>' : '') +
+        '<span class="premio">Win: ' + UI.moneta(av.premio) +
+        (pr.battuto(av.nome) ? ' · beaten ' + pr.battuto(av.nome) + '×' : ' · <b class="primo">first win + ' + UI.moneta(av.premio * 2) + ' & booster</b>') + '</span></div>'));
+      var mz = el('div', 'pannello riga', '<span>Deck<small>' + (pr.mazzoValido() ? pr.mazzo().nome : 'Incomplete deck') + '</small></span>');
       var sm = el('div', 'scegli-mazzo');
       d.mazzi.forEach(function (m, k) {
         var b = el('button', (k === d.mazzoAttivo ? 'su' : '') + (pr.mazzoValido(m) ? '' : ' no'), String(k + 1));
@@ -102,14 +103,16 @@
       });
       mz.appendChild(sm); o.appendChild(mz);
       setTimeout(function () { UI.sfuma(sm); var su = sm.querySelector('.su'); if (su) su.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }, 0);
+      // le due opzioni affiancate: una sotto l'altra il pannello superava l'altezza del telefono e Start copriva Long game
+      var fila = el('div', 'opzioni-fila');
       function interruttore(testo, sotto, chiave) {
         var r = el('button', 'pannello riga', '<span>' + testo + '<small>' + sotto + '</small></span><span class="interruttore' + (d.imp[chiave] ? ' su' : '') + '"></span>');
         r.addEventListener('click', function () { d.imp[chiave] = !d.imp[chiave]; pr.salva(); self.preparazione(); });
-        o.appendChild(r);
+        fila.appendChild(r);
       }
-      interruttore('Hidden cards', 'The opponent\'s hand stays secret', 'nascoste');
-      interruttore('Long game', 'Taller tower, more rounds, ×1.5 coins', 'lunga');
-      if (sf) o.appendChild(el('div', 'pannello riga', '<span>Challenge rules<small>You can\'t play rare cards. The challenger starts with its own castle and deck.</small></span>'));
+      interruttore('Hidden cards', 'Secret hand', 'nascoste');
+      interruttore('Long game', '×1.5 coins', 'lunga');
+      o.appendChild(fila);
       var via = el('button', 'btn oro avvia' + (pr.mazzoValido() ? '' : ' spento'), 'Start');
       via.addEventListener('click', function () {
         if (!pr.mazzoValido()) { UI.avviso('Complete your deck first: 15 cards per rarity'); UI.scuoti(via); return; }
