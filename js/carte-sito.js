@@ -326,6 +326,13 @@
     rifai();
   });
 
+  // dentro l'APK: il tasto indietro chiude lente e filtri (stanno nella storia), e solo dalla griglia esce
+  var cap = window.Capacitor;
+  if (cap && cap.isNativePlatform && cap.isNativePlatform() && cap.Plugins && cap.Plugins.App) {
+    document.body.classList.add('capacitor');
+    cap.Plugins.App.addListener('backButton', function (e) { if (e.canGoBack) history.back(); else cap.Plugins.App.exitApp(); });
+  }
+
   costruisciFiltri();
   $('ordina').value = S.ordina;
   $('verso').textContent = S.giu ? '↓' : '↑';
