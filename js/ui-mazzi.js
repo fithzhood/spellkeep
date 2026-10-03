@@ -10,7 +10,12 @@
     this.app = app; this.pr = app.profilo; this.i = indice || 0;
     this.scheda = 'C';
     // i filtri restano finche' l'app e' aperta (si ritrovano riaprendo l'editor)
+    // carte nuove = arrivate dopo l'ultima uscita dall'editor (etichetta New finche' non si esce)
+    if (typeof this.pr.d.editorVisto !== 'number') { this.pr.d.editorVisto = this.pr.d.collezione.length; this.pr.salva(); }
+    this.visto = this.pr.d.editorVisto;
     this.F = app.filtriEditor || (app.filtriEditor = { q: '', rar: [], tipi: [], kw: [], fuori: false, ordina: 'rar' });
+    // ci sono carte nuove: si parte da quelle
+    if (this.pr.d.collezione.length > this.visto) this.F.ordina = 'nuove';
     this.costruisci();
   }
 
@@ -58,8 +63,10 @@
     g.classList.toggle('testuale', !!this.pr.d.imp.testo);
     g.innerHTML = '';
     if (!carte.length) g.appendChild(el('div', 'vuoto-msg', 'No cards match these filters.'));
+    var visto = this.visto, pos = {};
+    this.pr.d.collezione.forEach(function (id, i) { pos[id] = i; });
     carte.forEach(function (d) {
-      var c = UI.carta(d.id, { mini: true });
+      var c = UI.carta(d.id, { mini: true, nuova: pos[d.id] >= visto });
       if (dentro[d.id]) c.classList.add('dentro');
       if (d.kw.indexOf('Forbidden') >= 0) c.classList.add('spenta');
       g.appendChild(c);
@@ -123,6 +130,7 @@
   // uscendo: se un mazzo toccato non ha 15 carte per rarita', si dice cosa manca o avanza
   Editor.prototype.esci = function () {
     var self = this, m = this.pr.mazzo(this.i);
+    this.pr.d.editorVisto = this.pr.d.collezione.length; this.pr.salva();
     if (this.pr.mazzoValido(m)) return this.app.home();
     var righe = ['C', 'U', 'R'].map(function (r) {
       var n = m[r].length, diff = n - 15;
@@ -143,7 +151,7 @@
   // ordine), Spare (solo le carte non ancora nel mazzo) e la X che azzera tutto.
   var TIPI_F = [['b', 'Bricks'], ['g', 'Gems'], ['r', 'Recruits'], ['m', 'Mixed'], ['z', 'Free']];
   var ICO_T = { b: 'brick-pile', g: 'crystal-growth', r: 'crested-helmet' };
-  var ORDINI = [['rar', 'Rarity'], ['costo', 'Cost'], ['nome', 'Name']];
+  var ORDINI = [['nuove', 'Newest'], ['rar', 'Rarity'], ['costo', 'Cost'], ['nome', 'Name']];
   var NESSUNA = '(none)';
   function totale(d) { return d.costo.b + d.costo.g + d.costo.r; }
   function alterna(a, x) { var i = a.indexOf(x); if (i >= 0) a.splice(i, 1); else a.push(x); }
@@ -153,11 +161,13 @@
 
   Editor.prototype.quantiFiltri = function () {
     var F = this.F;
-    return F.rar.length + F.tipi.length + F.kw.length + (F.q.trim() ? 1 : 0) + (F.fuori ? 1 : 0);
+    return F.rar.length + F.tipi.length + F.kw.length + (F.q.trim() ? 1 : 0);   // Spare e' un interruttore: la X non serve
   };
 
   Editor.prototype.carteFiltrate = function (dentro) {
-    var F = this.F, q = F.q.trim().toLowerCase();
+    var F = this.F, q = F.q.trim().toLowerCase(), arrivo = {};
+    // ordine d'arrivo: la collezione si allunga in coda (negozio, booster)
+    this.pr.d.collezione.forEach(function (id, i) { arrivo[id] = i; });
     return this.pr.d.collezione.map(UI.dati).filter(function (d) {
       if (F.rar.length && F.rar.indexOf(d.rarita) < 0) return false;
       if (F.tipi.length && F.tipi.indexOf(UI.tipo(d)) < 0) return false;
@@ -167,6 +177,7 @@
       return true;
     }).sort(function (a, b) {
       var ra = 'CUR'.indexOf(a.rarita) - 'CUR'.indexOf(b.rarita), ca = totale(a) - totale(b), na = a.nome.localeCompare(b.nome);
+      if (F.ordina === 'nuove') return arrivo[b.id] - arrivo[a.id];
       if (F.ordina === 'costo') return ca || ra || na;
       if (F.ordina === 'nome') return na;
       return ra || ca || na;
@@ -185,7 +196,7 @@
     f.querySelector('.apri-filtri').addEventListener('click', function () { self.pannelloFiltri(); });
     f.querySelector('.spare').addEventListener('click', function () { self.F.fuori = !self.F.fuori; self.disegna(); });
     f.querySelector('.azzera').addEventListener('click', function () {
-      var F = self.F; F.q = ''; F.rar.length = 0; F.tipi.length = 0; F.kw.length = 0; F.fuori = false;
+      var F = self.F; F.q = ''; F.rar.length = 0; F.tipi.length = 0; F.kw.length = 0;
       inp.value = ''; self.disegna();
     });
   };

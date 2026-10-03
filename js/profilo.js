@@ -112,6 +112,18 @@
     return carte;
   }
 
+  // quante carte di un tipo di booster sono gia' nella collezione, su quante ne puo' dare (totale e per rarita')
+  function contaBooster(id, collezione) {
+    var b = tipoBooster(id), ho = {}, r = { tot: 0, ho: 0, C: [0, 0], U: [0, 0], R: [0, 0] };
+    (collezione || []).forEach(function (x) { ho[x] = 1; });
+    Motore.catalogo.lista.forEach(function (d) {
+      if (d.kw.indexOf('Forbidden') >= 0 || !b.filtro(d)) return;
+      r.tot++; r[d.rarita][1]++;
+      if (ho[d.id]) { r.ho++; r[d.rarita][0]++; }
+    });
+    return r;
+  }
+
   Profilo.nuovo = function (caso) {
     caso = caso || Math.random;
     var coll = [], mazzo = { nome: 'Starter deck', C: [], U: [], R: [], segnalini: [] };
@@ -282,5 +294,5 @@
   radice.Profilo = Profilo;
   radice.ECONOMIA = ECONOMIA;
   radice.Avversari = { tutti: avversari, trova: avversario };
-  radice.Booster = { tipi: tipiBooster, tipo: tipoBooster, estraiTipi: estraiTipi, estraiCarte: estraiCarte, tipoCosto: tipoCosto };
+  radice.Booster = { tipi: tipiBooster, tipo: tipoBooster, estraiTipi: estraiTipi, estraiCarte: estraiCarte, tipoCosto: tipoCosto, conta: contaBooster };
 })(window);

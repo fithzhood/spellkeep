@@ -653,3 +653,37 @@ button.seg::after { content: ""; position: absolute; inset: -9px; border-radius:
 .mano .carta.spenta { filter: brightness(.88); }
 .mano .carta.spenta > :not(.testa-c), .mano .carta.spenta .nome-t, .mano .carta.spenta .rar { filter: saturate(.3) brightness(.62); }
 .mano .carta.spenta .costo:not(.manca) { filter: saturate(.5) brightness(.8); }
+/* booster: carte gia' trovate su quelle che puo' dare */
+.booster .b-conta { position: absolute; top: 9px; right: 4px; z-index: 2; padding: 0 4px; border-radius: 99px; background: rgba(10,10,16,.78);
+  color: #fff; font: 800 .5rem/1.5 var(--testo); box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
+.booster .b-conta.completo { background: #2f6b3a; color: #d9ffd9; }
+.booster.grande .b-conta { font-size: .66rem; top: 12px; right: 6px; }
+.offerta-booster .lato .conta-b { display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: center; color: var(--ink); }
+.conta-b .bc, .ap-conta .bc { font-weight: 800; color: var(--oro); }
+.bc-r { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.bc-r .rar { width: 7px; height: 7px; } .bc-r .rar.R { width: 9px; height: 9px; }
+.ap-conta { margin-top: 4px; display: flex; gap: 4px 10px; justify-content: center; flex-wrap: wrap; align-items: center; font-size: .7rem; }
+
+/* ------------------------------------------------------------ carta, look 4/10: colori pieni
+   Prima il colore del tipo era al 30% sul quasi nero e tutte le carte sembravano nere (e spente). Ora la cornice e'
+   il colore pieno del tipo (rosso mattoni, blu gemme, verde reclute, oro misto, argento gratis), la fascia in alto e'
+   lo stesso colore scurito, e il riquadro del testo e' una tinta scura dello stesso colore (si legge, e resta colorato). */
+.carta { --c: #a7adb6; --c-chiaro: color-mix(in srgb, var(--c) 72%, #fff); --c-scuro: color-mix(in srgb, var(--c) 58%, #000);
+  background: linear-gradient(180deg, var(--c-chiaro) 0%, var(--c) 22%, color-mix(in srgb, var(--c) 82%, #000) 100%);
+  border: 1.5px solid var(--c-chiaro);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.75), inset 0 0 0 1px rgba(0,0,0,.25), 0 4px 10px rgba(0,0,0,.55); }
+.carta.b { --c: #c4472e; } .carta.g { --c: #2f6fd3; } .carta.r { --c: #36964a; } .carta.m { --c: #c4952f; } .carta.z { --c: #9da4ae; }
+.carta .testa-c { background: var(--c-scuro); box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+.carta.z .testa-c { background: #4b5058; }
+.carta .arte { box-shadow: 0 0 0 1px rgba(0,0,0,.55); }
+.carta .eff { margin-top: 3px; border-radius: 3px; color: #f6eedd; background: color-mix(in srgb, var(--c) 34%, #120f0b);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.4); }
+.carta.z .eff { background: #2c2f35; }
+.carta .eff b { color: #fff; }
+/* il nome nella fascia: comune bianco, non comune azzurro, rara oro (sul fondo scuro del colore si leggono tutti) */
+.carta.rarU .nome-t { color: #a9d8ff; }
+.carta.rarR .nome-t { color: #ffd76e; }
+/* carta gia' nel mazzo (editor): cornice d'oro sopra il colore */
+.griglia .carta.mini.dentro { border-color: #ffe08a; box-shadow: 0 0 0 1.5px var(--oro), 0 3px 8px rgba(0,0,0,.5); }
+/* miniature dell'editor: l'etichetta New sta in fondo all'illustrazione, non sopra il nome */
+.carta.mini .etichetta-nuova { top: auto; bottom: 4px; font-size: .46rem; padding: 0 5px; }

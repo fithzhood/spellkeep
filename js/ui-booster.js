@@ -26,6 +26,14 @@
     return '<i class="b-bianca"></i>';            // senza keyword: una carta liscia
   }
   function nome(b) { return b.raro ? 'Rare' : b.nome; }
+  function conta(tipo) { return radice.App && App.profilo ? Booster.conta(tipo, App.profilo.d.collezione) : null; }
+  // "12 of 40 found · C 8/20 · U 3/14 · R 1/6"
+  function riepilogo(tipo) {
+    var c = conta(tipo); if (!c) return '';
+    var r = ['C', 'U', 'R'].filter(function (k) { return c[k][1]; }).map(function (k) {
+      return '<span class="bc-r"><i class="rar ' + k + '"></i>' + c[k][0] + '/' + c[k][1] + '</span>'; }).join(' ');
+    return '<span class="bc">' + (c.ho >= c.tot ? 'All ' + c.tot + ' found' : c.ho + ' of ' + c.tot + ' found') + '</span> ' + r;
+  }
   function descrizione(b) {
     if (b.raro) return 'Three rare cards.';
     if (b.kw) return 'Three random ' + b.kw + ' cards.';
@@ -40,7 +48,10 @@
     e.style.setProperty('--t', TINTA[tipo] || '#6b6157');
     // l'icona della keyword a un multiplo intero di pixel fisici, come sulle carte
     var lato = UI.kwPx(grande ? 44 : 28);
-    e.innerHTML = '<div class="b-icona">' + icona(b, lato) + '</div><div class="b-nome">' + nome(b) + '</div><div class="b-sotto">Booster</div>';
+    // carte gia' trovate su quelle che il booster puo' dare: dice se conviene ancora aprirlo
+    var c = conta(tipo), completo = c && c.ho >= c.tot;
+    e.innerHTML = '<div class="b-icona">' + icona(b, lato) + '</div><div class="b-nome">' + nome(b) + '</div><div class="b-sotto">Booster</div>' +
+      (c ? '<div class="b-conta' + (completo ? ' completo' : '') + '">' + (completo ? '✓ ' : '') + c.ho + '/' + c.tot + '</div>' : '');
     e.dataset.tipo = tipo;
     return e;
   }
@@ -80,7 +91,8 @@
         var nuove = esito.filter(function (r) { return !r.doppia; }).length, doppie = esito.length - nuove;
         var monete = esito.reduce(function (a, r) { return a + r.rimborso; }, 0);
         o.querySelector('.ap-riepilogo').innerHTML = nuove + (nuove === 1 ? ' new card' : ' new cards') +
-          (doppie ? ' · ' + doppie + (doppie === 1 ? ' duplicate' : ' duplicates') + ' sold for ' + UI.moneta(monete) : '');
+          (doppie ? ' · ' + doppie + (doppie === 1 ? ' duplicate' : ' duplicates') + ' sold for ' + UI.moneta(monete) : '') +
+          '<div class="ap-conta">' + riepilogo(tipo) + '</div>';
         via.disabled = false;
       }, 250 + esito.length * 380 + 300);
     }, 1050);
@@ -123,5 +135,5 @@
     f.appendChild(r); document.body.appendChild(f);
   }
 
-  radice.UIBooster = { pacchetto: pacchetto, apri: apri, sceltaPremio: sceltaPremio, finestraPremio: finestraPremio, descrizione: descrizione };
+  radice.UIBooster = { pacchetto: pacchetto, apri: apri, sceltaPremio: sceltaPremio, finestraPremio: finestraPremio, descrizione: descrizione, riepilogo: riepilogo };
 })(window);
