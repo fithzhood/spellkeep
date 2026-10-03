@@ -101,13 +101,36 @@
     return k.length === 0 ? 'z' : k.length > 1 ? 'm' : k[0];
   }
   function nomeKw(k) { return k.replace(/\s*\(.*\)$/, ''); }
+  // carte di supporto di una keyword: non l'hanno, ma la citano nel testo per se' (School of Nature "Summons a Nature",
+  // Necromancy, Relic hunter...). Non contano le contromosse: una keyword citata e' contro se la prima "hand" che la
+  // segue nella riga e' "opponent's hand" (Monster slayer, Sniper, Balrog). Richiesta di Luca, 4/10.
+  var SUPPORTO = null;
+  function supporto() {
+    if (SUPPORTO) return SUPPORTO;
+    SUPPORTO = {};
+    Motore.catalogo.lista.forEach(function (d) {
+      var propri = d.keyword.map(nomeKw);
+      (d.html || '').split('<br />').forEach(function (riga) {
+        var re = /<b>([^<]+)<\/b>/g, m;
+        while ((m = re.exec(riga))) {
+          var kw = m[1].trim();
+          if (propri.indexOf(kw) >= 0) continue;
+          var dopo = /(opponent's )?hand/.exec(riga.slice(m.index + m[0].length));
+          if (dopo && dopo[1]) continue;
+          (SUPPORTO[kw] = SUPPORTO[kw] || {})[d.id] = 1;
+        }
+      });
+    });
+    return SUPPORTO;
+  }
+
   function tipiBooster() {
     if (TIPI_BOOSTER) return TIPI_BOOSTER;
     var l = [];
     (window.KEYWORD || []).map(function (k) { return k.nome; }).filter(function (n) { return n !== 'Forbidden' && n !== 'Flare blitz'; })
       .sort().forEach(function (n) {
         l.push({ id: 'kw-' + n.toLowerCase().replace(/ /g, '_'), nome: n, kw: n,
-          filtro: function (d) { return d.keyword.some(function (k) { return nomeKw(k) === n; }); } });
+          filtro: function (d) { return d.keyword.some(function (k) { return nomeKw(k) === n; }) || !!(supporto()[n] || {})[d.id]; } });
       });
     l.push({ id: 'senza', nome: 'No keyword', filtro: function (d) { return !d.keyword.length; } });
     [['b', 'Red'], ['g', 'Blue'], ['r', 'Green'], ['z', 'White'], ['m', 'Multicolor']].forEach(function (c) {

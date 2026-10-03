@@ -36,7 +36,7 @@
   }
   function descrizione(b) {
     if (b.raro) return 'Three rare cards.';
-    if (b.kw) return 'Three random ' + b.kw + ' cards.';
+    if (b.kw) return 'Three random ' + b.kw + ' cards, support cards included.';
     if (b.costo) return 'Three random ' + { b: 'bricks-cost', g: 'gems-cost', r: 'recruits-cost', z: 'zero-cost', m: 'mixed-cost' }[b.costo] + ' cards.';
     return 'Three random cards without keywords.';
   }
