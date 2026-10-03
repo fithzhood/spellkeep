@@ -461,14 +461,9 @@ img { -webkit-user-drag: none; }
 
 /* ------------------------------------------------------------ carta: fascia di costo e rarita' sopra l'illustrazione */
 .carta .testa-c { display: flex; align-items: center; justify-content: space-between; gap: 2px; flex: none; margin-bottom: 2px;
-  padding: 1px; border-radius: 3px; background: linear-gradient(90deg, rgba(185,188,194,.32), rgba(185,188,194,.08)); }
-.carta.rarU .testa-c { background: linear-gradient(90deg, rgba(76,155,230,.8), rgba(76,155,230,.18)); }
-.carta.rarR .testa-c { background: linear-gradient(90deg, rgba(242,189,76,.95), rgba(200,140,40,.25)); }
-.carta .costi { position: static; display: flex; gap: 1px; }
-.carta .rar { position: static; flex: none; width: 9px; height: 9px; margin-right: 4px; transform: rotate(45deg); box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
-.carta.rarU .nomec { color: #b4dcff; }
-.carta.rarR .nomec { color: #f6cf6a; }
-.carta.rarR { box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 0 0 2.5px rgba(242,189,76,.65), 0 4px 10px rgba(0,0,0,.55); }
+  padding: 1px; border-radius: 3px; background: rgba(0,0,0,.38); }
+.carta .costi { position: static; display: flex; gap: 1px; flex: none; }
+.carta .rar { position: static; flex: none; margin-right: 3px; }
 .carta.mini .testa-c { margin-bottom: 1px; }
 .testuale .carta .kw { right: 2px; }
 /* carta appena pescata: etichetta NEW e bordo d'oro, per tutto il turno */
@@ -489,16 +484,38 @@ img { -webkit-user-drag: none; }
 /* mano: con la fascia del costo sopra l'illustrazione, nome compreso nella parte che spunta dal fondo */
 .mano { height: calc(var(--cw) * 1.4 * .70); }
 .mano .carta .testa-c .costo { font-size: .64rem; min-width: 1rem; height: 1rem; }
-.mano .carta .arte { aspect-ratio: 16 / 8.5; }
+.mano .carta .arte { aspect-ratio: 16 / 11; }
 .mano .carta .etichetta-nuova { top: 1.15rem; }
-/* nome nella fascia, solo dove la carta e' larga abbastanza: lente, carta giocata, sito delle carte, apertura dei booster */
-.carta .nome-t { display: none; flex: 1 1 auto; min-width: 0; text-align: center; padding: 0 2px; color: var(--ink);
-  font-weight: 800; font-size: .66rem; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  text-shadow: 0 1px 2px rgba(0,0,0,.85), 0 0 4px rgba(0,0,0,.5); }
-.carta.rarU .nome-t, .carta.rarR .nome-t { color: #fff; }
-.lente .carta .nome-t, .entrata .carta .nome-t, .sc-griglia .carta .nome-t, .ap-giro .carta .nome-t { display: block; }
-.lente .carta .nomec, .entrata .carta .nomec, .sc-griglia .carta .nomec, .ap-giro .carta .nomec { display: none; }
+/* il nome sta sempre nella fascia, fra costo e simbolo di rarita'; il suo colore dice la rarita' */
+.carta .nomec { display: none; }
+.carta .nome-t { display: block; flex: 1 1 auto; min-width: 0; text-align: center; padding: 0 2px; color: var(--ink);
+  font-weight: 800; font-size: .62rem; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0,0,0,.85); }
+.carta.rarU .nome-t { color: #8fcbff; }
+.carta.rarR .nome-t { color: #f6cf6a; }
+.carta.mini .nome-t { font-size: .5rem; padding: 0 1px; }
 .lente .carta .nome-t, .entrata .carta .nome-t { font-family: var(--display); font-weight: 700; font-size: .78rem; white-space: normal; }
 .sc-griglia .carta .nome-t { font-size: calc(.66rem * var(--s)); white-space: normal; }
-.ap-giro .carta .nome-t { font-size: .64rem; }
-.lente .carta .eff, .entrata .carta .eff, .sc-griglia .carta .eff, .ap-giro .carta .eff { padding-top: 3px; }
+.ultima .carta .nome-t { font-size: .52rem; }
+.carta .eff { padding-top: 3px; }
+/* simboli di rarita': forma E colore. Comune = cerchio grigio, non comune = rombo blu, rara = stella d'oro */
+.rar, .rombo { display: inline-block; flex: none; width: 9px; height: 9px; transform: none; border-radius: 0; box-shadow: none; clip-path: none; }
+.rar.C, .rombo.C { background: #c4c7cd; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+.rar.U, .rombo.U { background: #5fb2f0; transform: rotate(45deg) scale(.85); box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+.rar.R, .rombo.R { width: 12px; height: 12px; background: #f5c242;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+/* carte strette (mano, editor, negozio, ultima giocata): la fascia va su due righe, sopra costo e simbolo, sotto il nome
+   a tutta larghezza (fra costo e simbolo restavano 55 px: troppo poco anche per una parola come "Foundations") */
+.mano .carta .testa-c, .carta.mini .testa-c, .offerta .carta .testa-c, .ultima .carta .testa-c { flex-wrap: wrap; row-gap: 0; }
+.mano .carta .nome-t, .carta.mini .nome-t, .offerta .carta .nome-t, .ultima .carta .nome-t {
+  order: 3; flex-basis: 100%; white-space: normal; line-height: 1.05; padding: 1px 1px 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: normal; word-break: normal; }
+.mano .carta .nome-t, .offerta .carta .nome-t { font-size: .58rem; }
+.mano .carta .arte { aspect-ratio: 16 / 10; }
+.mano .carta .etichetta-nuova { top: 2.1rem; }
+.mano { height: calc(var(--cw) * 1.4 * .74); }
+.mano .carta .testa-c .costo { font-size: .58rem; min-width: .9rem; height: .9rem; }
+.mano .carta .arte { aspect-ratio: 16 / 9; }
+/* booster raro: la stella delle rare, non il rombo */
+.b-rombo { transform: none; width: 46%; box-shadow: none; filter: drop-shadow(0 0 6px rgba(255,220,120,.85));
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }

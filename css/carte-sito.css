@@ -44,7 +44,8 @@
 .sc-griglia .carta .nomec { font-size: calc(.66rem * var(--s)); white-space: normal; padding: calc(3px * var(--s)) 2px 1px; }
 .sc-griglia .carta .eff { flex: 1 0 auto; overflow: visible; font-size: calc(.6rem * var(--s)); }
 .sc-griglia .carta .costo { font-size: calc(.74rem * var(--s)); min-width: calc(1.2rem * var(--s)); height: calc(1.2rem * var(--s)); }
-.sc-griglia .carta .rar { width: calc(7px * var(--s)); height: calc(7px * var(--s)); right: calc(4px * var(--s)); top: calc(4px * var(--s)); }
+.sc-griglia .carta .rar { width: calc(9px * var(--s)); height: calc(9px * var(--s)); }
+.sc-griglia .carta .rar.R { width: calc(12px * var(--s)); height: calc(12px * var(--s)); }
 .sc-griglia .carta .kw img { width: var(--kwg, 16px); height: var(--kwg, 16px); }
 .carta .kwnomi { display: flex; flex-wrap: wrap; justify-content: center; gap: 1px 7px; margin-top: 2px; padding: 3px 2px 1px;
   border-top: 1px solid rgba(245,236,218,.12); font-size: calc(.56rem * var(--s)); font-weight: 700; color: var(--ink); line-height: 1.25; }
@@ -75,7 +76,8 @@
   font-family: var(--testo); font-weight: 700; font-size: .8rem; white-space: nowrap; }
 .gett.su { background: var(--ink); border-color: var(--ink); color: #1a1408; }
 .gett svg { width: 17px; height: 17px; }
-.gett i.rar { width: 9px; height: 9px; transform: rotate(45deg); box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+.gett i.rar { width: 10px; height: 10px; }
+.gett i.rar.R { width: 13px; height: 13px; }
 .tipo.b svg { color: var(--mat-chiaro); } .tipo.g svg { color: var(--gem-chiaro); } .tipo.r svg { color: var(--rec-chiaro); }
 .tipo.b.su { background: var(--mat); border-color: var(--mat); } .tipo.g.su { background: var(--gem); border-color: var(--gem); }
 .tipo.r.su { background: var(--rec); border-color: var(--rec); } .tipo.m.su { background: var(--mix); border-color: var(--mix); }
@@ -119,7 +121,8 @@
 .ls-costo svg { width: 17px; height: 17px; }
 .ls-costo.b { background: var(--mat); } .ls-costo.g { background: var(--gem); } .ls-costo.r { background: var(--rec); } .ls-costo.z { background: var(--zero); padding: 0 11px; }
 .ls-rar { display: inline-flex; align-items: center; gap: 7px; font-size: .88rem; font-weight: 700; }
-.ls-rar .rar { display: inline-block; width: 9px; height: 9px; transform: rotate(45deg); box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+.ls-rar .rar { width: 11px; height: 11px; }
+.ls-rar .rar.R { width: 15px; height: 15px; }
 .ls-dato { font-size: .88rem; color: var(--ink2); white-space: nowrap; }
 .ls-eff { white-space: pre-line; font-size: 1.04rem; line-height: 1.42; color: var(--ink); margin-bottom: 12px;
   padding: 10px 12px; border-radius: 8px; background: rgba(0,0,0,.32); border: 1px solid var(--filo); }
