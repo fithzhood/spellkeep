@@ -924,3 +924,10 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .vetrina-booster { align-items: stretch; }
 .offerta-booster .lato { justify-content: flex-start; }
 .offerta-booster .lato .btn { margin-top: auto; }
+/* fra le buste del premio, la preferita dell'avversario */
+.booster.preferito { box-shadow: 0 0 0 2px var(--oro), 0 0 14px rgba(255,214,120,.6), 0 5px 12px rgba(0,0,0,.6); }
+.booster .b-pref { position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); z-index: 3; padding: 0 6px; border-radius: 99px;
+  background: linear-gradient(180deg, #fff1bf, #e2b35c); color: #2a1a05; font: 900 .46rem/1.5 var(--display); letter-spacing: .1em; text-transform: uppercase;
+  white-space: nowrap; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
+.booster .b-pref { bottom: auto; top: -7px; }
+.finale .pacchi { padding-top: 6px; overflow: visible; }

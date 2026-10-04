@@ -292,7 +292,13 @@
     if (esito === 1) s.sfideVinte[chiaveAvv(opz.sfida)] = (s.sfideVinte[chiaveAvv(opz.sfida)] || 0) + 1;
     this.ultimiBonus = esito === 1 ? this.traguardi(opz.sfida, prima, opz.lunga) : [];
     // dopo una vittoria: tre booster fra cui sceglierne uno. Resta in attesa finche' non lo si apre.
-    if (esito === 1) this.d.premio = estraiTipi(ECONOMIA.boosterPremio);
+    // dopo una vittoria: tre buste fra cui sceglierne una, e una e' sempre la preferita dell'avversario (al centro);
+    // le altre due a caso e diverse da quella. Il giullare non ha una preferita: tre a caso.
+    if (esito === 1) {
+      var pref = boosterPreferito(opz.sfida), altre = estraiTipi(ECONOMIA.boosterPremio + 1).filter(function (x) { return x !== pref; });
+      this.d.premio = pref ? [altre[0], pref, altre[1]] : altre.slice(0, ECONOMIA.boosterPremio);
+      this.d.premioPreferito = pref || null;
+    }
     this.d.partita = null;
     this.rinnovaNegozio();
     this.salva();

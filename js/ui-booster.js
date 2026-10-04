@@ -112,6 +112,7 @@
     var fila = el('div', 'pacchi');
     tipi.forEach(function (tipo) {
       var pk = pacchetto(tipo);
+      if (tipo === pr.d.premioPreferito) { pk.classList.add('preferito'); pk.appendChild(el('div', 'b-pref', 'Favourite')); }
       pk.addEventListener('click', function () {
         var esito = pr.scegliPremio(tipo);
         if (!esito) return;
