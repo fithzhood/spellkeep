@@ -9,7 +9,7 @@
   function Editor(app, indice) {
     this.app = app; this.pr = app.profilo; this.i = indice || 0;
     this.scheda = 'C';
-    // i filtri restano finche' l'app e' aperta (si ritrovano riaprendo l'editor)
+    // i filtri valgono finche' si resta nell'editor: uscendo si azzerano (esci)
     // carte nuove = arrivate dopo l'ultima uscita dall'editor (etichetta New finche' non si esce)
     if (typeof this.pr.d.editorVisto !== 'number') { this.pr.d.editorVisto = this.pr.d.collezione.length; this.pr.salva(); }
     this.visto = this.pr.d.editorVisto;
@@ -161,7 +161,10 @@
   Editor.prototype.esci = function () {
     var self = this, m = this.pr.mazzo(this.i);
     this.pr.d.editorVisto = this.pr.d.collezione.length; this.pr.salva();
-    if (this.pr.mazzoValido(m)) return this.app.home();
+    // uscendo dall'editor i filtri si azzerano (richiesta di Luca): alla prossima apertura si riparte puliti
+    var app = this.app;
+    function esciPulito() { app.filtriEditor = null; app.home(); }
+    if (this.pr.mazzoValido(m)) return esciPulito();
     var righe = ['C', 'U', 'R'].map(function (r) {
       var n = m[r].length, diff = n - 15;
       return '<li class="' + (diff ? 'no' : 'ok') + '">' + RARITA[r] + ' <b>' + n + '/15</b>' +
@@ -172,7 +175,7 @@
       '<p class="piccolo">If you leave now, "' + m.nome + '" is kept as a draft and can’t be used in games until it is fixed.</p>';
     var az = el('div', 'azioni'), resta = el('button', 'btn oro', 'Keep editing'), via = el('button', 'btn', 'Leave as draft');
     resta.addEventListener('click', function () { f.remove(); });
-    via.addEventListener('click', function () { f.remove(); self.app.home(); });
+    via.addEventListener('click', function () { f.remove(); app.filtriEditor = null; app.home(); });
     az.appendChild(via); az.appendChild(resta); r.appendChild(az); f.appendChild(r); document.body.appendChild(f);
   };
 
