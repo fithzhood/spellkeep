@@ -880,3 +880,13 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .ultime-gruppo.mie .ult-chi { color: #9cc3f5; }
 .ultime-gruppo.sue .ult-chi { color: #ff9d8f; }
 .ultime-gruppo .ultime { gap: 4px; }
+
+/* anteprima della carta scelta: bollini pieni e piu' grandi, sopra le carte avversarie (che si attenuano) */
+.ant { font-size: .84rem; padding: 1px 6px; border-radius: 99px; line-height: 1.25;
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,.85), 0 2px 6px rgba(0,0,0,.7); animation: ant-pulsa 1s ease-in-out infinite alternate; }
+@keyframes ant-pulsa { to { box-shadow: 0 0 0 1.5px rgba(0,0,0,.85), 0 0 10px rgba(255,255,255,.45); } }
+.targa .ant { text-shadow: none; top: 50%; transform: translateY(-50%); }
+.targa { z-index: 5; }
+.alto { transition: opacity .2s; }
+.schermo.gioco.in-anteprima .alto { opacity: .3; }
+.schermo.gioco.in-anteprima .centro { opacity: .45; transition: opacity .2s; }

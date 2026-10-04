@@ -98,6 +98,8 @@
 
   Battaglia.prototype.aggiorna = function () {
     var p = this.p, ant = this.anteprima(), self = this;
+    // con una carta scelta, la fila delle carte avversarie si attenua: i numeri dell'anteprima restano leggibili
+    this.s.classList.toggle('in-anteprima', !!ant);
     ['io', 'lui'].forEach(function (chi) {
       var n = chi === 'io' ? 1 : 2, g = p.g[n], a = ant && ant[chi];
       var box = self.q('.ris-' + chi);
