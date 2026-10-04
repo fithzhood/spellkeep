@@ -178,7 +178,7 @@
 
   // ------------------------------------------------------------------ filtri
   // Una riga sola, senza scorrimento: ricerca, pulsante Filters (pannello con rarita', tipo di costo, keyword,
-  // ordine), Spare (solo le carte non ancora nel mazzo) e la X che azzera tutto.
+  // ordine) e Spare (solo le carte non ancora nel mazzo). Per azzerare: Reset nel pannello (la X l'ha tolta Luca).
   var TIPI_F = [['b', 'Bricks'], ['g', 'Gems'], ['r', 'Recruits'], ['m', 'Mixed'], ['z', 'Free']];
   var ICO_T = { b: 'brick-pile', g: 'crystal-growth', r: 'crested-helmet' };
   var ORDINI = [['nuove', 'Newest'], ['rar', 'Rarity'], ['costo', 'Cost'], ['nome', 'Name']];
@@ -221,18 +221,13 @@
   Editor.prototype.impostaFiltri = function () {
     var self = this, f = this.s.querySelector('.filtri');
     f.innerHTML = '<label class="cerca">' + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>' + '<input type="search" placeholder="Search" enterkeyhint="search" autocomplete="off"></label>' +
-      '<button class="apri-filtri">Filters<b class="n"></b></button><button class="spare">Spare</button>' +
-      '<button class="azzera" aria-label="Clear filters">×</button>';
+      '<button class="apri-filtri">Filters<b class="n"></b></button><button class="spare">Spare</button>';
     var inp = f.querySelector('input');
     inp.value = this.F.q;
     inp.addEventListener('input', function () { self.F.q = inp.value; self.disegna(); });
     inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') inp.blur(); });
     f.querySelector('.apri-filtri').addEventListener('click', function () { self.pannelloFiltri(); });
     f.querySelector('.spare').addEventListener('click', function () { self.F.fuori = !self.F.fuori; self.disegna(); });
-    f.querySelector('.azzera').addEventListener('click', function () {
-      var F = self.F; F.q = ''; F.rar.length = 0; F.tipi.length = 0; F.kw.length = 0;
-      inp.value = ''; self.disegna();
-    });
   };
 
   // solo lo stato dei pulsanti: la barra non si ridisegna, cosi' la casella di ricerca non perde il cursore
@@ -241,7 +236,6 @@
     f.querySelector('.apri-filtri').classList.toggle('su', n > 0);
     f.querySelector('.apri-filtri .n').textContent = n ? n : '';
     f.querySelector('.spare').classList.toggle('su', F.fuori);
-    f.querySelector('.azzera').hidden = !this.quantiFiltri();
   };
 
   Editor.prototype.pannelloFiltri = function () {
