@@ -890,3 +890,14 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .alto { transition: opacity .2s; }
 .schermo.gioco.in-anteprima .alto { opacity: .3; }
 .schermo.gioco.in-anteprima .centro { opacity: .45; transition: opacity .2s; }
+
+/* carte appena uscite da un booster: fascia su due righe come in mano e nel negozio (sopra costo e simbolo, sotto il
+   nome a tutta larghezza): su una riga sola il nome si troncava, e con tre costi spariva del tutto */
+.apertura .carta .testa-c { flex-wrap: wrap; row-gap: 0; }
+.apertura .carta .nome-t { order: 3; flex-basis: 100%; white-space: normal; line-height: 1.05; padding: 1px 1px 0; font-size: .6rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.apertura .carta .costi.c3 { gap: 0; }
+.apertura .carta .costi.c3 .costo { font-family: var(--testo); font-weight: 900; letter-spacing: -.03em; padding: 0 2px; min-width: 0; }
+.apertura .carta .costi.c3 .costo + .costo { margin-left: -2px; }
+.apertura .carta .testa-c .rar { margin-right: 2px; }
+.avversari .avv-caso { width: 100%; margin: 2px 0 2px; min-height: 40px; font-size: .7rem; }

@@ -62,6 +62,15 @@
       // tocco e l'altro (prima la lista orizzontale ripartiva sempre dall'inizio)
       var lista = s.querySelector('.avversari');
       var voci = Avversari.tutti().map(function (a) { return Object.assign({ chiusa: a.tipo !== 'base' && d.sfide.indexOf(a.nome) < 0 }, a); });
+      // un avversario a caso fra quelli sbloccati (diverso da quello scelto): lo seleziona e la lista scorre fino a lui
+      var aCaso = el('button', 'btn avv-caso', '🎲 Random opponent');
+      aCaso.addEventListener('click', function () {
+        var aperti = voci.filter(function (v) { return !v.chiusa && v.nome !== self.sceltaAvv; });
+        if (!aperti.length) return;
+        self.scrollAvv = 0;
+        self.preparazione(aperti[Math.floor(Math.random() * aperti.length)].nome);
+      });
+      lista.appendChild(aCaso);
       var FASCE = [['base', 'Basic'], ['rivale', 'Medium'], ['sfidante', 'Advanced']];
       FASCE.forEach(function (f) {
         var qui = voci.filter(function (v) { return v.tipo === f[0]; });
