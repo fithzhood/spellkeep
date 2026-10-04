@@ -105,10 +105,10 @@
       var box = self.q('.ris-' + chi);
       box.innerHTML = ['b', 'g', 'r'].map(function (k) {
         var v = a && a[RIS[k]], ve = a && a[EDI[k]];
-        return '<div class="ris ' + k + '">' + UI.icona(ICO[k]) + '<span class="n">' + g[RIS[k]] + '</span>' +
+        return '<div class="ris ' + k + '">' + UI.icona(ICO[k]) + '<span class="n' + (g[RIS[k]] >= 100 ? ' tre' : '') + '">' + g[RIS[k]] + '</span>' +
           '<span class="var">' + (v ? segno(v, 'ant') : segno(g.Changes[RIS[k]], 'delta')) + '</span>' +
           '<span class="prod">' + FAB[k] + ' <b>' + g[EDI[k]] + '</b>' + (ve ? ' ' + segno(ve, 'ant') : (g.Changes[EDI[k]] ? ' ' + segno(g.Changes[EDI[k]], 'delta') : '')) + '</span></div>';
-      }).join('') + self.segnalini(g, a && a.scatta);
+      }).join('') + '<div class="ris-fondo">' + self.segnalini(g, a && a.scatta) + self.totale(g, a) + '</div>';
       self.rocca(chi, g, a);
     });
     this.disegnaAlto(); this.disegnaCentro(); this.disegnaMano();
@@ -116,6 +116,16 @@
     if (p.stato !== 'in corso') giro.innerHTML = '<span>Game over</span>';
     else if (p.corrente === 1) giro.innerHTML = '<span class="tuo">Your turn</span><span>Round ' + p.round + '</span>';
     else giro.innerHTML = '<span class="suo">Opponent\'s turn</span><span>Round ' + p.round + '</span>';
+  };
+
+  // totale delle risorse e obiettivo della vittoria a risorse (400, o 600 in partita lunga), con una barretta;
+  // dorato quando si avvicina, e con la carta scelta mostra il totale che ne verrebbe
+  Battaglia.prototype.totale = function (g, a) {
+    var rv = this.p.cfg.res_victory, tot = g.Bricks + g.Gems + g.Recruits;
+    var dopo = a ? tot + (a.Bricks || 0) + (a.Gems || 0) + (a.Recruits || 0) : null, mostra = dopo !== null && dopo !== tot ? dopo : tot;
+    var pc = Math.max(0, Math.min(100, mostra / rv * 100));
+    return '<div class="ris-tot' + (mostra >= rv * 0.75 ? ' vicino' : '') + (dopo !== null && dopo !== tot ? (dopo > tot ? ' sale' : ' scende') : '') + '" title="Resource victory at ' + rv + '">' +
+      '<span class="tt"><b>' + mostra + '</b><small>/' + rv + '</small></span><i style="width:' + pc.toFixed(1) + '%"></i></div>';
   };
 
   // scatta = segnalini che la carta selezionata farebbe arrivare a 100 (l'anello pulsa)

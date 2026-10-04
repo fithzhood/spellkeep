@@ -960,3 +960,20 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .tk-maiusc.su { background: rgba(226,179,92,.3); border-color: var(--oro); }
 .tk-spazio { flex-grow: 5; max-width: none; font-size: .62rem; text-transform: uppercase; letter-spacing: .1em; color: var(--ink2); }
 .tk-ok { flex-grow: 2; max-width: 120px; min-height: 40px; }
+
+/* risorse a tre cifre: il numero non scavalca piu' l'icona */
+.ris { width: 92px; grid-template-columns: 22px minmax(2.1ch, auto) 1fr; }
+.ris .n.tre { font-size: .98rem; letter-spacing: -.02em; }
+/* in fondo alla colonna: anello del token e totale delle risorse verso la vittoria a risorse */
+.ris-fondo { display: flex; align-items: center; gap: 6px; width: 92px; }
+.ris-lui .ris-fondo { flex-direction: row-reverse; }
+.ris-fondo .segnalini { width: auto; flex: none; }
+.ris-tot { position: relative; flex: 1; min-width: 0; height: 26px; border-radius: 7px; background: rgba(14,15,22,.66); border: 1px solid rgba(245,236,218,.13);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.ris-tot i { position: absolute; left: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, #8f7a4a, #e2b35c); transition: width .4s; }
+.ris-tot .tt { position: relative; display: flex; align-items: baseline; gap: 1px; line-height: 1; }
+.ris-tot b { font-family: var(--display); font-weight: 800; font-size: .72rem; font-variant-numeric: tabular-nums; }
+.ris-tot small { font-size: .5rem; color: var(--ink3); }
+.ris-tot.vicino { border-color: var(--oro); box-shadow: 0 0 8px rgba(226,179,92,.45); }
+.ris-tot.vicino b { color: var(--oro); }
+.ris-tot.sale b { color: var(--su); } .ris-tot.scende b { color: var(--giu); }
