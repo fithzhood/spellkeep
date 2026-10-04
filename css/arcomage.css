@@ -901,3 +901,7 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .apertura .carta .costi.c3 .costo + .costo { margin-left: -2px; }
 .apertura .carta .testa-c .rar { margin-right: 2px; }
 .avversari .avv-caso { width: 100%; margin: 2px 0 2px; min-height: 40px; font-size: .7rem; }
+/* bollini dell'anteprima su torre e muro: sopra il cartellino, o sotto se sopra non c'e' posto (classe .sotto) */
+.targa .ant, .lui .targa .ant { left: 50%; right: auto; top: auto; bottom: 100%; transform: translateX(-50%); margin: 0 0 4px; z-index: 6; }
+.targa .ant.sotto, .lui .targa .ant.sotto { bottom: auto; top: 100%; margin: 4px 0 0; }
+.schermo.gioco.in-anteprima .alto { opacity: .18; }

@@ -141,6 +141,13 @@
     r.querySelector('.t-corpo').style.height = Math.max(2, maxT * Math.min(g.Tower, cfg.max_tower) / cfg.max_tower).toFixed(1) + 'px';
     r.querySelector('.m-corpo').style.height = (g.Wall > 0 ? Math.max(2, maxM * Math.min(g.Wall, cfg.max_wall) / cfg.max_wall) : 0).toFixed(1) + 'px';
     r.querySelector('.muro').classList.toggle('vuoto', g.Wall <= 0);
+    // bollini dell'anteprima: sopra il cartellino (al centro si apre la carta, che copriva quelli di lato); se sopra
+    // c'e' la fila delle carte avversarie o il bordo, sotto il cartellino, sul corpo della torre o del muro
+    var alto = this.q('.alto'), limite = Math.max(alto && alto.children.length ? alto.getBoundingClientRect().bottom : 0, campo.getBoundingClientRect().top) + 4;
+    [targaT, targaM].forEach(function (t) {
+      var b = t.querySelector('.ant'); if (!b) return;
+      b.classList.toggle('sotto', t.getBoundingClientRect().top - b.offsetHeight - 4 < limite);
+    });
   };
 
   Battaglia.prototype.disegnaAlto = function () {
