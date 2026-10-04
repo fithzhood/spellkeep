@@ -30,8 +30,9 @@
     s.querySelector('.indietro').addEventListener('click', function () { self.esci(); });
     s.querySelector('.vista').addEventListener('click', function () { self.pr.d.imp.testo = !self.pr.d.imp.testo; self.pr.salva(); self.disegna(); });
     s.querySelector('h2').addEventListener('click', function () {
-      var m = self.pr.mazzo(self.i), nome = window.prompt('Deck name', m.nome);
-      if (nome && nome.trim()) { m.nome = nome.trim().slice(0, 24); self.pr.salva(); self.disegna(); }
+      // tastiera del gioco, non la finestra di sistema del telefono
+      var m = self.pr.mazzo(self.i);
+      Tastiera.apri({ titolo: 'Deck name', valore: m.nome, max: 24, ok: function (nome) { m.nome = nome.slice(0, 24); self.pr.salva(); self.disegna(); } });
     });
     this.impostaGriglia();
     this.impostaFiltri();

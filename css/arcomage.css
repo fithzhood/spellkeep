@@ -939,3 +939,24 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .pannello-filtri .sup-g .interruttore.su::after { left: 17px; }
 .pannello-filtri .sup-g.su { background: rgba(226,179,92,.16); border-color: var(--oro); color: var(--ink); }
 .pannello-filtri .kw-g.nessuna { opacity: .5; }
+
+/* tastiera del gioco (nome del mazzo): niente finestra di sistema ne' tastiera del telefono */
+.tastiera-velo { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: rgba(8,9,14,.6); animation: dissolve .15s;
+  padding: 6px calc(8px + var(--lato)); }
+.tastiera { width: min(640px, 100%); padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 6px; background: rgba(18,17,26,.98); }
+.tk-testa { display: flex; align-items: center; gap: 10px; }
+.tk-titolo { font-family: var(--display); font-size: .62rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--oro); white-space: nowrap; }
+.tk-campo { flex: 1; min-width: 0; height: 40px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; background: rgba(0,0,0,.45);
+  border: 1px solid var(--oro); font: 800 .9rem var(--testo); overflow: hidden; white-space: pre; }
+.tk-cursore { width: 2px; height: 1.1em; background: var(--oro); margin-left: 1px; animation: tk-lampeggia 1s steps(1) infinite; }
+@keyframes tk-lampeggia { 50% { opacity: 0; } }
+.tk-chiudi { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 0; background: rgba(245,236,218,.1); color: var(--ink); font-size: 1.2rem; }
+.tk-tasti { display: flex; flex-direction: column; gap: 4px; }
+.tk-riga { display: flex; gap: 4px; justify-content: center; }
+.tk-tasto { flex: 1 1 0; max-width: 58px; min-width: 0; height: 40px; border-radius: 7px; border: 1px solid rgba(245,236,218,.18); background: rgba(245,236,218,.08);
+  color: var(--ink); font: 800 .8rem var(--testo); padding: 0; }
+.tk-tasto:active { background: rgba(226,179,92,.35); }
+.tk-largo { flex-grow: 1.5; max-width: 80px; }
+.tk-maiusc.su { background: rgba(226,179,92,.3); border-color: var(--oro); }
+.tk-spazio { flex-grow: 5; max-width: none; font-size: .62rem; text-transform: uppercase; letter-spacing: .1em; color: var(--ink2); }
+.tk-ok { flex-grow: 2; max-width: 120px; min-height: 40px; }
