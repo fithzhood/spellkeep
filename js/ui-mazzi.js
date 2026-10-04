@@ -44,16 +44,10 @@
     s.querySelector('h2').textContent = m.nome + ' ✎';
     s.querySelector('.vista').textContent = this.pr.d.imp.testo ? 'Art' : 'Text';
     s.querySelector('.cassa').innerHTML = 'Collection ' + this.pr.d.collezione.length;
-    // mazzi
+    // mazzi: un pulsante che apre la griglia di tutti i mazzi (nome, token, carte di punta, colori, stato)
     var sm = s.querySelector('.scegli-mazzo'); sm.innerHTML = '';
-    this.pr.d.mazzi.forEach(function (mz, k) {
-      var b = el('button', (k === self.i ? 'su' : '') + (self.pr.mazzoValido(mz) ? '' : ' no'), String(k + 1));
-      b.title = mz.nome;
-      b.addEventListener('click', function () { self.i = k; self.disegna(); });
-      sm.appendChild(b);
-    });
-    if (!sm.sfumata) { UI.sfuma(sm); sm.sfumata = true; }
-    var attivo = sm.querySelector('.su'); if (attivo) setTimeout(function () { attivo.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }, 0);
+    sm.appendChild(SceltaMazzo.pulsante(this.app, this.i, function (k) { self.i = k; self.disegna(); }));
+
     this.statoFiltri();
 
     // griglia della collezione, ordinata per rarita' e costo

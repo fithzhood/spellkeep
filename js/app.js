@@ -105,15 +105,10 @@
         '<span class="premio">Win: ' + UI.moneta(av.premio) +
         (pr.battuto(av.nome) ? ' · beaten ' + pr.battuto(av.nome) + '× · <b class="primo">' + nomeBooster(av.nome) + ' booster at win ' + pr.prossimoBooster(av.nome) + '</b>'
           : ' · <b class="primo">first win + ' + UI.moneta(av.premio * 2) + ' & ' + nomeBooster(av.nome) + ' booster</b>') + '</span></div>'));
-      var mz = el('div', 'pannello riga', '<span>Deck<small>' + (pr.mazzoValido() ? pr.mazzo().nome : 'Incomplete deck') + '</small></span>');
-      var sm = el('div', 'scegli-mazzo');
-      d.mazzi.forEach(function (m, k) {
-        var b = el('button', (k === d.mazzoAttivo ? 'su' : '') + (pr.mazzoValido(m) ? '' : ' no'), String(k + 1));
-        b.addEventListener('click', function () { d.mazzoAttivo = k; pr.salva(); self.preparazione(); });
-        sm.appendChild(b);
-      });
-      mz.appendChild(sm); o.appendChild(mz);
-      setTimeout(function () { UI.sfuma(sm); var su = sm.querySelector('.su'); if (su) su.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }, 0);
+      // il mazzo: un pulsante che apre la griglia di tutti i mazzi (a 30 mazzi i numeri non bastavano)
+      var mz = el('div', 'riga-mazzo');
+      mz.appendChild(SceltaMazzo.pulsante(this, d.mazzoAttivo, function (k) { d.mazzoAttivo = k; pr.salva(); self.preparazione(); }));
+      o.appendChild(mz);
       // le due opzioni affiancate: una sotto l'altra il pannello superava l'altezza del telefono e Start copriva Long game
       var fila = el('div', 'opzioni-fila');
       function interruttore(testo, sotto, chiave) {

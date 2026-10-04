@@ -405,6 +405,7 @@
     if (k >= 0) { m[r].splice(k, 1); if (!m.segnaliniScelti) m.segnalini = Motore.segnaliniAuto(m); this.salva(); }
   };
 
+  Profilo.ECONOMIA = ECONOMIA;
   radice.Profilo = Profilo;
   radice.ECONOMIA = ECONOMIA;
   radice.Avversari = { tutti: avversari, trova: avversario };

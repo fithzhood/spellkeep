@@ -980,3 +980,36 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .tk-info { font-size: .66rem; font-weight: 800; color: var(--oro); white-space: nowrap; }
 .tk-info:empty { display: none; }
 .filtri .cerca input { cursor: pointer; caret-color: transparent; }
+
+/* scelta del mazzo: pulsante con il mazzo attuale e griglia di tutti i mazzi */
+.sm-pulsante { display: flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 10px; border-radius: 9px; max-width: 100%; min-width: 0;
+  background: rgba(14,15,22,.72); border: 1px solid rgba(245,236,218,.22); color: var(--ink); font: inherit; cursor: pointer; }
+.sm-pulsante .sm-nome { font-family: var(--display); font-weight: 800; font-size: .7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sm-pulsante .sm-freccia { font-style: normal; color: var(--oro); }
+.sm-tok { width: var(--kw1, 16px); height: var(--kw1, 16px); image-rendering: pixelated; flex: none; }
+.sm-ok, .sm-no { font-size: .58rem; font-weight: 800; white-space: nowrap; flex: none; }
+.sm-ok { color: var(--su); } .sm-no { color: #ffb05c; }
+.testa .scegli-mazzo { max-width: 260px; overflow: visible; min-width: 0; }
+.riga-mazzo { flex: none; }
+.riga-mazzo .sm-pulsante { width: 100%; }
+.riga-mazzo .sm-pulsante .sm-nome { flex: 1; text-align: left; }
+
+.velo-mazzi { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(8,9,14,.55); animation: dissolve .15s;
+  padding: 8px calc(8px + var(--lato)); }
+.scelta-mazzi { width: min(860px, 100%); max-height: calc(100svh - 16px); display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 10px; background: rgba(18,17,26,.98); }
+.sm-testa { display: flex; align-items: baseline; gap: 10px; }
+.sm-testa b { font-family: var(--display); font-size: .8rem; color: var(--oro); }
+.sm-testa small { font-size: .6rem; color: var(--ink3); }
+.sm-chiudi { margin-left: auto; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(245,236,218,.1); color: var(--ink); font-size: 1.1rem; align-self: center; }
+.sm-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; overflow-y: auto; min-height: 0; padding: 2px; }
+.sm-casella { display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: 9px; text-align: left; color: inherit; font: inherit; cursor: pointer;
+  background: rgba(245,236,218,.05); border: 1px solid rgba(245,236,218,.15); }
+.sm-casella.su { border-color: var(--oro); box-shadow: 0 0 0 1px var(--oro), 0 0 12px rgba(226,179,92,.35); background: rgba(60,46,20,.6); }
+.sm-riga { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.sm-casella .sm-nome { font-family: var(--display); font-weight: 800; font-size: .66rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sm-carte { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; height: 40px; }
+.sm-carte img { width: 100%; height: 40px; object-fit: cover; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
+.sm-barra { display: flex; height: 5px; border-radius: 99px; overflow: hidden; background: rgba(245,236,218,.1); }
+.sm-barra i { display: block; height: 100%; }
+.sm-piede { display: flex; justify-content: space-between; align-items: center; }
+.sm-attivo { font-size: .54rem; font-weight: 800; color: var(--oro); text-transform: uppercase; letter-spacing: .08em; }
