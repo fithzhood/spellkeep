@@ -408,5 +408,5 @@
   radice.Profilo = Profilo;
   radice.ECONOMIA = ECONOMIA;
   radice.Avversari = { tutti: avversari, trova: avversario };
-  radice.Booster = { tipi: tipiBooster, tipo: tipoBooster, estraiTipi: estraiTipi, estraiCarte: estraiCarte, tipoCosto: tipoCosto, conta: contaBooster, preferito: boosterPreferito };
+  radice.Booster = { tipi: tipiBooster, tipo: tipoBooster, estraiTipi: estraiTipi, estraiCarte: estraiCarte, tipoCosto: tipoCosto, conta: contaBooster, preferito: boosterPreferito, supporto: supporto };
 })(window);

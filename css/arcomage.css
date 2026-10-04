@@ -931,3 +931,11 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
   white-space: nowrap; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
 .booster .b-pref { bottom: auto; top: -7px; }
 .finale .pacchi { padding-top: 6px; overflow: visible; }
+/* filtri dell'editor: interruttore delle carte di supporto e keyword di cui non hai carte */
+.pannello-filtri .kws .fsez-t { display: flex; align-items: center; gap: 8px; }
+.pannello-filtri .sup-g { margin-left: auto; min-height: 34px; padding: 0 10px 0 6px; gap: 7px; font-size: .62rem; letter-spacing: 0; text-transform: none; font-family: var(--testo); }
+.pannello-filtri .sup-g .interruttore { width: 34px; height: 20px; }
+.pannello-filtri .sup-g .interruttore::after { width: 14px; height: 14px; }
+.pannello-filtri .sup-g .interruttore.su::after { left: 17px; }
+.pannello-filtri .sup-g.su { background: rgba(226,179,92,.16); border-color: var(--oro); color: var(--ink); }
+.pannello-filtri .kw-g.nessuna { opacity: .5; }

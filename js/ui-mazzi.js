@@ -183,6 +183,10 @@
   var ORDINI = [['nuove', 'Newest'], ['rar', 'Rarity'], ['costo', 'Cost'], ['nome', 'Name']];
   var NESSUNA = '(none)';
   function totale(d) { return d.costo.b + d.costo.g + d.costo.r; }
+  // la carta ha la keyword (o, con il supporto acceso, e' una sua carta di supporto: School of Nature per Nature...)
+  function haKw(d, k, conSupporto) {
+    return d.keyword.map(UI.kwNome).indexOf(k) >= 0 || (!!conSupporto && !!((Booster.supporto()[k] || {})[d.id]));
+  }
   function alterna(a, x) { var i = a.indexOf(x); if (i >= 0) a.splice(i, 1); else a.push(x); }
   function icoTipo(k) {
     return ICO_T[k] ? UI.icona(ICO_T[k]) : k === 'm' ? '<i class="tre"><u class="b"></u><u class="g"></u><u class="r"></u></i>' : '<i class="zero">0</i>';
@@ -200,7 +204,7 @@
     return this.pr.d.collezione.map(UI.dati).filter(function (d) {
       if (F.rar.length && F.rar.indexOf(d.rarita) < 0) return false;
       if (F.tipi.length && F.tipi.indexOf(UI.tipo(d)) < 0) return false;
-      if (F.kw.length && !F.kw.some(function (k) { return k === NESSUNA ? !d.keyword.length : d.keyword.map(UI.kwNome).indexOf(k) >= 0; })) return false;
+      if (F.kw.length && !F.kw.some(function (k) { return k === NESSUNA ? !d.keyword.length : haKw(d, k, F.supporto); })) return false;
       if (F.fuori && dentro[d.id]) return false;
       if (q && d.nome.toLowerCase().indexOf(q) < 0 && d.effetto.toLowerCase().indexOf(q) < 0 && d.kw.toLowerCase().indexOf(q) < 0) return false;
       return true;
@@ -241,14 +245,19 @@
 
   Editor.prototype.pannelloFiltri = function () {
     var self = this, F = this.F, v = el('div', 'velo-filtri'), p = el('div', 'pannello pannello-filtri');
-    // keyword presenti nella collezione, con quante carte ne hanno
-    var conta = {}, senza = 0;
-    this.pr.d.collezione.forEach(function (id) {
-      var d = UI.dati(id);
-      if (!d.keyword.length) senza++;
-      d.keyword.map(UI.kwNome).filter(function (k, i, l) { return l.indexOf(k) === i; }).forEach(function (k) { if (k !== 'Forbidden') conta[k] = (conta[k] || 0) + 1; });
-    });
-    var kws = Object.keys(conta).sort();
+    // tutte le keyword, con quante carte ne possiedi su quante esistono (come sulle buste); con "Support cards"
+    // acceso contano anche le carte di supporto
+    var ho = {}; this.pr.d.collezione.forEach(function (id) { ho[id] = 1; });
+    var tutte = Motore.catalogo.lista.filter(function (d) { return d.kw.indexOf('Forbidden') < 0; });
+    var kws = (window.KEYWORD || []).map(function (x) { return x.nome; }).filter(function (n) { return n !== 'Forbidden'; }).sort();
+    function conta(k) {
+      var c = [0, 0];
+      tutte.forEach(function (d) {
+        var si = k === NESSUNA ? !d.keyword.length : haKw(d, k, F.supporto);
+        if (si) { c[1]++; if (ho[d.id]) c[0]++; }
+      });
+      return c;
+    }
     function gett(html, cls, attivo, fai) {
       var b = el('button', 'gett ' + cls + (attivo() ? ' su' : ''), html);
       b.addEventListener('click', function () { fai(); b.classList.toggle('su', attivo()); aggiorna(); });
@@ -278,10 +287,23 @@
     ordini.forEach(function (b) { o[1].appendChild(b); });
     sx.appendChild(o[0]);
     var k = sezione('Keywords <small>any of these</small>', 'kws');
-    kws.concat([NESSUNA]).forEach(function (n) {
-      var html = n === NESSUNA ? 'No keyword <small>' + senza + '</small>' : '<img src="' + UI.kwIcona(n) + '" alt="">' + n + ' <small>' + conta[n] + '</small>';
-      k[1].appendChild(gett(html, 'kw-g', function () { return F.kw.indexOf(n) >= 0; }, function () { alterna(F.kw, n); }));
+    var sup = el('button', 'gett sup-g' + (F.supporto ? ' su' : ''), '<span class="interruttore' + (F.supporto ? ' su' : '') + '"></span>Support cards');
+    sup.title = 'Also count and show the cards that support a keyword (e.g. School of Nature for Nature)';
+    sup.addEventListener('click', function () {
+      F.supporto = !F.supporto;
+      sup.classList.toggle('su', F.supporto); sup.querySelector('.interruttore').classList.toggle('su', F.supporto);
+      disegnaKw(); aggiorna();
     });
+    k[0].querySelector('.fsez-t').appendChild(sup);
+    function disegnaKw() {
+      k[1].innerHTML = '';
+      kws.concat([NESSUNA]).forEach(function (n) {
+        var c = conta(n), nome = n === NESSUNA ? 'No keyword' : '<img src="' + UI.kwIcona(n) + '" alt="">' + n;
+        var b = gett(nome + ' <small>' + c[0] + '/' + c[1] + '</small>', 'kw-g' + (c[0] ? '' : ' nessuna'), function () { return F.kw.indexOf(n) >= 0; }, function () { alterna(F.kw, n); });
+        k[1].appendChild(b);
+      });
+    }
+    disegnaKw();
     dx.appendChild(k[0]);
     var piede = el('div', 'f-piede'), az = el('button', 'btn', 'Reset'), ok = el('button', 'btn oro', '');
     az.addEventListener('click', function () {
