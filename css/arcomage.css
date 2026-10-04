@@ -905,3 +905,18 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .targa .ant, .lui .targa .ant { left: 50%; right: auto; top: auto; bottom: 100%; transform: translateX(-50%); margin: 0 0 4px; z-index: 6; }
 .targa .ant.sotto, .lui .targa .ant.sotto { bottom: auto; top: 100%; margin: 4px 0 0; }
 .schermo.gioco.in-anteprima .alto { opacity: .18; }
+
+/* negozio, fila dei booster: tre offerte uguali e allineate in alto, pacchetto piu' piccolo, accanto solo nome,
+   conteggio e prezzo (prima le descrizioni di lunghezza diversa le disallineavano e i prezzi uscivano dal fondo) */
+.vetrina-booster { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: start; justify-content: stretch; flex: none; }
+.offerta-booster { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px; align-items: center; padding: 5px 6px; border-radius: 9px;
+  background: rgba(14,15,22,.55); border: 1px solid var(--filo); min-width: 0; }
+.offerta-booster .booster { --bw: 52px; }
+.offerta-booster .lato { max-width: none; min-width: 0; gap: 3px; align-self: stretch; justify-content: space-between; }
+.offerta-booster .lato .nome-b { font-family: var(--display); font-size: .62rem; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.offerta-booster .lato .conta-b { font-size: .54rem; line-height: 1.2; }
+.offerta-booster .btn { min-width: 0; width: 100%; min-height: 36px; padding: 0 6px; }
+.vetrina-col { justify-content: space-between; }
+.offerta-booster .booster .b-nome, .offerta-booster .booster .b-sotto, .offerta-booster .booster .b-conta { display: none; }
+.offerta-booster .booster { justify-content: center; }
+.offerta-booster .btn { min-height: 40px; }

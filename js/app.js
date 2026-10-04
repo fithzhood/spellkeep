@@ -214,7 +214,9 @@
         var aperto = n.aperti.indexOf(i) >= 0, prezzo = pr.prezzoBooster(tipo), b = Booster.tipo(tipo);
         var o = el('div', 'offerta-booster' + (aperto ? ' aperto' : '')), pk = UIBooster.pacchetto(tipo);
         pk.addEventListener('click', function () { UI.avviso(b.nome + ' booster · ' + UIBooster.descrizione(b)); });
-        var lato = el('div', 'lato', '<small>' + UIBooster.descrizione(b) + '</small><small class="conta-b">' + UIBooster.riepilogo(tipo) + '</small>');
+        // accanto al pacchetto solo il conteggio e il prezzo: le descrizioni di lunghezza diversa disallineavano la fila
+        // (la descrizione si legge toccando il pacchetto)
+        var lato = el('div', 'lato', '<b class="nome-b">' + (b.raro ? 'Rare' : b.nome) + '</b><small class="conta-b">' + UIBooster.riepilogo(tipo) + '</small>');
         var bt = el('button', 'btn' + (aperto || d.monete < prezzo ? ' spento' : ' oro'), aperto ? 'Opened' : UI.moneta(prezzo));
         bt.addEventListener('click', function () {
           if (aperto) return;
