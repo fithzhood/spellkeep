@@ -920,3 +920,7 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .offerta-booster .booster .b-nome, .offerta-booster .booster .b-sotto, .offerta-booster .booster .b-conta { display: none; }
 .offerta-booster .booster { justify-content: center; }
 .offerta-booster .btn { min-height: 40px; }
+/* le tre offerte alte uguali, prezzo sempre in fondo (sul telefono il dettaglio per rarita' va su 2 o 3 righe) */
+.vetrina-booster { align-items: stretch; }
+.offerta-booster .lato { justify-content: flex-start; }
+.offerta-booster .lato .btn { margin-top: auto; }
