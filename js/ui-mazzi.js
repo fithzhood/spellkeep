@@ -224,8 +224,17 @@
       '<button class="apri-filtri">Filters<b class="n"></b></button><button class="spare">Spare</button>';
     var inp = f.querySelector('input');
     inp.value = this.F.q;
-    inp.addEventListener('input', function () { self.F.q = inp.value; self.disegna(); });
-    inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') inp.blur(); });
+    // la ricerca usa la tastiera del gioco (niente tastiera del telefono): i risultati si aggiornano mentre si scrive
+    inp.readOnly = true; inp.setAttribute('inputmode', 'none');
+    function cerca(ev) {
+      if (ev) ev.preventDefault();
+      inp.blur();
+      Tastiera.apri({ titolo: 'Search', valore: self.F.q, max: 30, vuotoOk: true, minuscolo: true,
+        cambia: function (q) { if (q === self.F.q) return; self.F.q = q; inp.value = q; self.disegna(); },
+        info: function () { var n = self.s.querySelectorAll('.griglia .carta').length; return n + (n === 1 ? ' card' : ' cards'); },
+        ok: function (q) { self.F.q = q; inp.value = q; self.disegna(); } });
+    }
+    f.querySelector('.cerca').addEventListener('click', cerca);
     f.querySelector('.apri-filtri').addEventListener('click', function () { self.pannelloFiltri(); });
     f.querySelector('.spare').addEventListener('click', function () { self.F.fuori = !self.F.fuori; self.disegna(); });
   };

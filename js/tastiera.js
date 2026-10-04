@@ -1,31 +1,34 @@
 // Tastiera del gioco: una finestra nello stile di SpellKeep con una tastiera propria, al posto della finestra di sistema
 // e della tastiera del telefono (che rompevano l'immersione). Va bene anche la tastiera fisica, sul PC.
 //   Tastiera.apri({ titolo: 'Deck name', valore: 'Starter deck', max: 24, ok: function (testo) { ... } })
+// Per una ricerca: cambia(testo) a ogni tasto, info(testo) -> riga in alto (es. "12 cards"), vuotoOk, minuscolo.
 (function (radice) {
   'use strict';
   var el = UI.el;
   var RIGHE = ['1234567890', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
   function apri(opz) {
-    var testo = String(opz.valore || ''), max = opz.max || 24, maiusc = !testo.length;
+    var testo = String(opz.valore || ''), max = opz.max || 24, maiusc = !testo.length && !opz.minuscolo;
     var velo = el('div', 'tastiera-velo'), p = el('div', 'pannello tastiera');
     p.innerHTML = '<div class="tk-testa"><span class="tk-titolo">' + (opz.titolo || '') + '</span><div class="tk-campo"><span class="tk-testo"></span><i class="tk-cursore"></i></div>' +
-      '<button class="tk-chiudi" aria-label="Cancel">×</button></div><div class="tk-tasti"></div>';
+      '<span class="tk-info"></span><button class="tk-chiudi" aria-label="Close">×</button></div><div class="tk-tasti"></div>';
     var campo = p.querySelector('.tk-testo'), tasti = p.querySelector('.tk-tasti');
     function mostra() {
       campo.textContent = testo;
       p.querySelectorAll('.tk-lettera').forEach(function (b) { b.textContent = maiusc ? b.dataset.c.toUpperCase() : b.dataset.c; });
       p.querySelector('.tk-maiusc').classList.toggle('su', maiusc);
-      p.querySelector('.tk-ok').classList.toggle('spento', !testo.trim());
+      p.querySelector('.tk-ok').classList.toggle('spento', !opz.vuotoOk && !testo.trim());
+      if (opz.cambia) opz.cambia(testo);
+      if (opz.info) p.querySelector('.tk-info').textContent = opz.info(testo);
     }
     function scrivi(c) {
       if (testo.length >= max) { UI.scuoti(p.querySelector('.tk-campo')); return; }
       testo += maiusc ? c.toUpperCase() : c;
       maiusc = false; mostra();
     }
-    function cancella() { testo = testo.slice(0, -1); if (!testo.length) maiusc = true; mostra(); }
+    function cancella() { testo = testo.slice(0, -1); if (!testo.length && !opz.minuscolo) maiusc = true; mostra(); }
     function conferma() {
-      if (!testo.trim()) { UI.scuoti(p.querySelector('.tk-ok')); return; }
+      if (!opz.vuotoOk && !testo.trim()) { UI.scuoti(p.querySelector('.tk-ok')); return; }
       chiudi(); if (opz.ok) opz.ok(testo.trim());
     }
     function chiudi() { velo.remove(); document.removeEventListener('keydown', fisica, true); }

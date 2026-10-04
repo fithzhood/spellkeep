@@ -977,3 +977,6 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .ris-tot.vicino { border-color: var(--oro); box-shadow: 0 0 8px rgba(226,179,92,.45); }
 .ris-tot.vicino b { color: var(--oro); }
 .ris-tot.sale b { color: var(--su); } .ris-tot.scende b { color: var(--giu); }
+.tk-info { font-size: .66rem; font-weight: 800; color: var(--oro); white-space: nowrap; }
+.tk-info:empty { display: none; }
+.filtri .cerca input { cursor: pointer; caret-color: transparent; }
