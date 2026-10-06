@@ -263,20 +263,12 @@
       chiusa: function () { self.sel = 0; self.modo = 0; self.aggiorna(); },
       azioni: function (lato) {
         if (d.modi > 0 && giocabile) {
-          var modi = el('div', 'modi');
-          for (var m = 1; m <= d.modi; m++) {
-            (function (mm) {
-              var b = el('button', '', 'Mode ' + mm);
-              b.addEventListener('click', function () {
-                self.modo = mm;
-                modi.querySelectorAll('button').forEach(function (x, j) { x.classList.toggle('su', j === mm - 1); });
-                gioca.classList.remove('spento');
-                self.aggiorna();
-              });
-              modi.appendChild(b);
-            })(m);
-          }
-          lato.appendChild(modi);
+          lato.classList.add('con-scelta');      // (il lato si attacca alla lente solo dopo: la classe va su di lui)
+          lato.appendChild(self.sceltaModo(d, pos, function (mm) {
+            self.modo = mm;
+            gioca.classList.remove('spento');
+            self.aggiorna();
+          }));
         }
         if (giocabile) {
           var pr = self.p.anteprima(1, pos, d.modi > 0 ? 1 : 0), sc = pr && pr.anteprima ? pr.anteprima.scatta : [];
@@ -300,6 +292,58 @@
       }
     });
     document.querySelector('.velo').style.background = 'rgba(8,9,14,.22)';
+  };
+
+  // La scelta del "modo" di una carta, detta in chiaro invece di "Mode 1 ... Mode 8" (Luca, 6/10/2026). Tre famiglie:
+  //  - modi veri ("Mode1: ... Mode2: ..."): un pulsante per modo con il suo effetto scritto;
+  //  - evocazioni a scelta ("Evoke A, B or C", 2-3 modi): le carte evocabili in miniatura;
+  //  - una carta della mano (8 modi = le 8 posizioni): la mano in miniatura, tua o dell'avversario
+  //    (coperte con "?" nelle partite a carte nascoste); la carta giocata e' segnata "This card".
+  function arteCarta(id) {
+    return window.ARTE && window.ARTE.has(id) ? 'img/arte/card_' + id + '.jpg?h=' + ((window.ARTE_H || {})[id] || '') : 'img/carte/card_' + id + '.png';
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  Battaglia.prototype.sceltaModo = function (d, pos, scegli) {
+    var self = this, testo = d.effetto || '', voci = [], titolo, griglia = true;
+    // modi veri: le righe dopo "ModeN:" fino al modo seguente
+    var modi = {}, cur = 0;
+    testo.split('\n').forEach(function (r) {
+      var m = r.match(/^\s*Mode\s*(\d+)\s*:\s*(.*)$/i);
+      if (m) { cur = +m[1]; modi[cur] = m[2] ? [m[2]] : []; } else if (cur && r.trim()) modi[cur].push(r.trim());
+    });
+    var ev = testo.match(/Evoke (?:an? )?([^\n]+)/);
+    if (Object.keys(modi).length) {
+      titolo = 'Choose an effect'; griglia = false;
+      for (var k = 1; k <= d.modi; k++) voci.push({ testo: (modi[k] || []).join(' · ') || 'Option ' + k });
+    } else if (ev && d.modi <= 3) {
+      titolo = 'Choose the card to evoke';
+      ev[1].split(/,\s*|\s+or\s+/).slice(0, d.modi).forEach(function (n) {
+        var c = Motore.catalogo.lista.filter(function (x) { return x.nome.toLowerCase() === n.trim().toLowerCase(); })[0];
+        voci.push({ id: c ? c.id : null, nome: c ? c.nome : n.trim().replace(/^last card$/i, 'Your last card') });
+      });
+    } else {
+      var lui = /opponent's hand/i.test(testo), g = this.p.g[lui ? 2 : 1];
+      titolo = lui ? 'Choose a card in the opponent\'s hand' : 'Choose a card in your hand';
+      for (var i = 1; i <= d.modi; i++) {
+        var cid = g.Hand.get(i), vis = !lui || !this.p.nascoste || (g.Revealed && g.Revealed.has(i));
+        voci.push({ id: vis ? cid : null, nome: vis && cid ? UI.dati(cid).nome : 'Hidden card', propria: !lui && i === pos });
+      }
+    }
+    var box = el('div', 'scelta-modo'), lista = el('div', griglia ? 'sm-mini' : 'sm-effetti');
+    box.appendChild(el('div', 'sm-titolo', titolo));
+    voci.forEach(function (v, j) {
+      var b = griglia
+        ? el('button', 'sm-t' + (v.propria ? ' propria' : ''), (v.id ? '<img src="' + arteCarta(v.id) + '" alt="">' : '<i>?</i>') +
+            '<span>' + esc(v.nome) + '</span>' + (v.propria ? '<em>This card</em>' : ''))
+        : el('button', 'sm-e', '<b>' + (j + 1) + '</b><span>' + esc(v.testo) + '</span>');
+      b.addEventListener('click', function () {
+        lista.querySelectorAll('button').forEach(function (x, n) { x.classList.toggle('su', n === j); });
+        scegli(j + 1);
+      });
+      lista.appendChild(b);
+    });
+    box.appendChild(lista);
+    return box;
   };
 
   // ------------------------------------------------------------------ azioni
