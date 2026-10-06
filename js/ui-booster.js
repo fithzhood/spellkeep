@@ -111,14 +111,20 @@
     if (!tipi) return false;
     var fila = el('div', 'pacchi');
     tipi.forEach(function (tipo) {
-      var pk = pacchetto(tipo);
-      if (tipo === pr.d.premioPreferito) { pk.classList.add('preferito'); pk.appendChild(el('div', 'b-pref', 'Favourite')); }
+      var pk = pacchetto(tipo), posto = pk;
+      // l'etichetta sta in un contenitore fuori dalla busta: la busta taglia quello che sborda (overflow hidden),
+      // e "Favourite" a cavallo del bordo usciva a meta' ("AVOURIT", 6/10/2026)
+      if (tipo === pr.d.premioPreferito) {
+        pk.classList.add('preferito');
+        posto = el('div', 'pacco-premio');
+        posto.appendChild(pk); posto.appendChild(el('div', 'b-pref', 'Favourite'));
+      }
       pk.addEventListener('click', function () {
         var esito = pr.scegliPremio(tipo);
         if (!esito) return;
         apri(tipo, esito, poi);
       });
-      fila.appendChild(pk);
+      fila.appendChild(posto);
     });
     contenitore.appendChild(fila);
     return true;

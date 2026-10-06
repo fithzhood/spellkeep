@@ -930,6 +930,11 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
   background: linear-gradient(180deg, #fff1bf, #e2b35c); color: #2a1a05; font: 900 .46rem/1.5 var(--display); letter-spacing: .1em; text-transform: uppercase;
   white-space: nowrap; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
 .booster .b-pref { bottom: auto; top: -7px; }
+/* la busta preferita sta in un contenitore: l'etichetta sborda sopra senza essere tagliata dalla busta */
+.pacco-premio { position: relative; flex: none; }
+.pacco-premio > .b-pref { position: absolute; left: 50%; top: -9px; transform: translateX(-50%); z-index: 3; padding: 0 6px; border-radius: 99px;
+  background: linear-gradient(180deg, #fff1bf, #e2b35c); color: #2a1a05; font: 900 .46rem/1.5 var(--display); letter-spacing: .1em; text-transform: uppercase;
+  white-space: nowrap; box-shadow: 0 0 0 1px rgba(0,0,0,.5); pointer-events: none; }
 .finale .pacchi { padding-top: 6px; overflow: visible; }
 /* filtri dell'editor: interruttore delle carte di supporto e keyword di cui non hai carte */
 .pannello-filtri .kws .fsez-t { display: flex; align-items: center; gap: 8px; }
