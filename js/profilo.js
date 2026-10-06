@@ -176,15 +176,38 @@
     return r;
   }
 
+  // Il mazzo con cui parte chi comincia: lo "Starter deck" costruito da Luca (6/10/2026) al posto di 45 carte a caso.
+  // La collezione iniziale sono esattamente queste carte. Se il mazzo non e' piu' valido (una carta sparita dal
+  // catalogo, una rarita' con meno di 15 carte) si torna al mazzo casuale di prima.
+  var MAZZO_INIZIALE = {
+    nome: 'Starter deck',
+    C: [23, 269, 489, 582, 278, 301, 259, 24, 457, 391, 411, 627, 362, 548, 258],
+    U: [136, 466, 12, 19, 49, 50, 189, 376, 276, 25, 202, 142, 56, 159, 217],
+    R: [21, 614, 637, 283, 428, 691, 680, 126, 61, 517, 198, 701, 450, 464, 615],
+    segnalini: ['Beast']
+  };
+  function mazzoInizialeValido() {
+    var per = Motore.catalogo.perId;
+    return ['C', 'U', 'R'].every(function (r) {
+      return MAZZO_INIZIALE[r].length === 15 && MAZZO_INIZIALE[r].every(function (id) { return per[id] && per[id].rarita === r; });
+    });
+  }
+
   Profilo.nuovo = function (caso) {
     caso = caso || Math.random;
-    var coll = [], mazzo = { nome: 'Starter deck', C: [], U: [], R: [], segnalini: [] };
-    ['C', 'U', 'R'].forEach(function (r) {
-      var scelte = mescola(vendibili(r), caso).slice(0, 15);
-      coll = coll.concat(scelte);
-      mazzo[r] = scelte.slice();
-    });
-    mazzo.segnalini = Motore.segnaliniAuto(mazzo);
+    var coll = [], mazzo;
+    if (mazzoInizialeValido()) {
+      mazzo = JSON.parse(JSON.stringify(MAZZO_INIZIALE));
+      ['C', 'U', 'R'].forEach(function (r) { mazzo[r].forEach(function (id) { if (coll.indexOf(id) < 0) coll.push(id); }); });
+    } else {
+      mazzo = { nome: 'Starter deck', C: [], U: [], R: [], segnalini: [] };
+      ['C', 'U', 'R'].forEach(function (r) {
+        var scelte = mescola(vendibili(r), caso).slice(0, 15);
+        coll = coll.concat(scelte);
+        mazzo[r] = scelte.slice();
+      });
+    }
+    if (!mazzo.segnalini || !mazzo.segnalini.length) mazzo.segnalini = Motore.segnaliniAuto(mazzo);
     var p = new Profilo({
       versione: VERSIONE, monete: ECONOMIA.monetePartenza, collezione: coll,
       mazzi: [mazzo], slot: ECONOMIA.slotPartenza, mazzoAttivo: 0,
