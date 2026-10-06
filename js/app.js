@@ -183,12 +183,14 @@
       var v = s.querySelector('.vetrina');
       if (!n.carte.length) v.appendChild(el('div', 'vuoto-msg', 'You own every card. Impressive.'));
       n.carte.forEach(function (id) {
-        var venduta = n.vendute.indexOf(id) >= 0, prezzo = pr.prezzoCarta(id);
+        // "Owned": la carta e' arrivata da un booster dopo che il negozio l'aveva messa in vendita
+        var venduta = n.vendute.indexOf(id) >= 0 || pr.possiede(id), prezzo = pr.prezzoCarta(id);
+        var scritta = n.vendute.indexOf(id) >= 0 ? 'Sold' : 'Owned';
         var o = el('div', 'offerta' + (venduta ? ' venduta' : ''));
         var c = UI.carta(id);
         c.addEventListener('click', function () {
           UI.apriLente(id, {
-            nota: venduta ? 'Sold' : '', notaNeutra: true,
+            nota: venduta ? scritta : '', notaNeutra: true,
             azioni: venduta ? null : function (lato) {
               var az = el('div', 'azioni'), b = el('button', 'btn oro' + (d.monete < prezzo ? ' spento' : ''), 'Buy · ' + UI.moneta(prezzo));
               b.addEventListener('click', function () { UI.chiudiLente(); self.compra(function () { return pr.compraCarta(id); }); });
@@ -197,7 +199,7 @@
           });
         });
         o.appendChild(c);
-        var b = el('button', 'btn' + (venduta ? ' spento' : d.monete < prezzo ? ' spento' : ' oro'), venduta ? 'Sold' : UI.moneta(prezzo));
+        var b = el('button', 'btn' + (venduta ? ' spento' : d.monete < prezzo ? ' spento' : ' oro'), venduta ? scritta : UI.moneta(prezzo));
         b.addEventListener('click', function () { if (!venduta) self.compra(function () { return pr.compraCarta(id); }, b); });
         o.appendChild(b);
         v.appendChild(o);

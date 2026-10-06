@@ -81,7 +81,25 @@
     return c ? 'col-' + c : null;
   }
 
-  function Profilo(dati) { this.d = dati; }
+  function Profilo(dati) { this.d = dati; this.ripulito = togliDoppioni(dati); }
+  // Una carta compare una volta sola nella collezione. Un doppione poteva entrare comprando dal negozio una carta
+  // trovata nel frattempo in un booster (Berserker di Luca, 6/10/2026): lo si toglie e si rende quanto vale
+  // rivenderlo, come per i doppioni dei booster. Restituisce quante copie ha tolto.
+  function togliDoppioni(d) {
+    if (!d || !d.collezione) return 0;
+    var visti = {}, tenute = [], tolte = 0;
+    d.collezione.forEach(function (id) {
+      if (visti[id]) {
+        tolte++;
+        var c = radice.Motore && Motore.catalogo.perId[id];
+        if (c) d.monete = (d.monete || 0) + ECONOMIA.rivendita[c.rarita];
+        return;
+      }
+      visti[id] = 1; tenute.push(id);
+    });
+    if (tolte) d.collezione = tenute;
+    return tolte;
+  }
 
   function mescola(l, caso) {
     for (var i = l.length - 1; i > 0; i--) { var j = Math.floor(caso() * (i + 1)), t = l[i]; l[i] = l[j]; l[j] = t; }
@@ -228,7 +246,9 @@
         if (d && d.versione === VERSIONE) {
           // profili di prima dei booster: il negozio in corso li riceve subito
           if (d.negozio && !d.negozio.booster) { d.negozio.booster = estraiTipi(ECONOMIA.boosterPerNegozio); d.negozio.aperti = []; }
-          return new Profilo(d);
+          var p = new Profilo(d);
+          if (p.ripulito) p.salva();
+          return p;
         }
       }
     } catch (e) { /* profilo illeggibile: si riparte */ }
@@ -357,6 +377,8 @@
   Profilo.prototype.compraCarta = function (id) {
     var n = this.d.negozio, prezzo = this.prezzoCarta(id);
     if (!n || n.carte.indexOf(id) < 0 || n.vendute.indexOf(id) >= 0) return 'Not on sale';
+    // il negozio sceglie fra le carte che non si hanno, ma un booster aperto dopo puo' averla gia' data
+    if (this.possiede(id)) return 'Already in your collection';
     if (this.d.monete < prezzo) return 'Not enough coins';
     this.d.monete -= prezzo; this.d.collezione.push(id); n.vendute.push(id);
     this.salva(); return null;
