@@ -733,6 +733,7 @@ button.seg::after { content: ""; position: absolute; inset: -9px; border-radius:
 .preparazione .opzioni .avvia { position: sticky; bottom: 0; flex: none; }
 .scheda-avv { display: flex; gap: 8px; padding: 8px; align-items: flex-start; flex: none; }
 .scheda-avv img { width: 54px; height: 54px; border-radius: 8px; flex: none; box-shadow: 0 0 0 1px var(--oro); }
+.scheda-avv .dado-caso { width: 54px; height: 54px; border-radius: 8px; flex: none; box-shadow: 0 0 0 1px var(--oro); display: grid; place-items: center; font-size: 30px; background: rgba(0,0,0,.25); }
 .scheda-avv b { font-family: var(--display); font-size: .74rem; display: block; line-height: 1.15; }
 .scheda-avv p { font-size: .6rem; color: var(--ink2); line-height: 1.2; margin: 2px 0 3px; }
 .scheda-avv .premio { font-size: .66rem; color: var(--ink); }
@@ -886,7 +887,7 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .scheda-avv p.regole { color: var(--oro); -webkit-line-clamp: 2; }
 .preparazione { grid-template-columns: minmax(0, 1fr) 300px; }
 .scheda-avv { padding: 6px 8px; gap: 8px; }
-.scheda-avv img { width: 48px; height: 48px; }
+.scheda-avv img, .scheda-avv .dado-caso { width: 48px; height: 48px; }
 .scheda-avv b { font-size: .7rem; }
 .scheda-avv p { -webkit-line-clamp: 2; margin: 1px 0 2px; }
 .scheda-avv p.regole { -webkit-line-clamp: 1; }
@@ -925,6 +926,7 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .apertura .carta .costi.c3 .costo + .costo { margin-left: -2px; }
 .apertura .carta .testa-c .rar { margin-right: 2px; }
 .avversari .avv-caso { width: 100%; margin: 2px 0 2px; min-height: 40px; font-size: .7rem; }
+.avversari .avv-caso.su { box-shadow: 0 0 0 2px var(--oro), 0 0 12px rgba(226,179,92,.45); background: rgba(60,46,20,.85); color: var(--oro); }
 /* bollini dell'anteprima su torre e muro: sopra il cartellino, o sotto se sopra non c'e' posto (classe .sotto) */
 .targa .ant, .lui .targa .ant { left: 50%; right: auto; top: auto; bottom: 100%; transform: translateX(-50%); margin: 0 0 4px; z-index: 6; }
 .targa .ant.sotto, .lui .targa .ant.sotto { bottom: auto; top: 100%; margin: 4px 0 0; }

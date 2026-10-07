@@ -6,6 +6,7 @@
     return m ? m[1] : '?';
   })();
   var el = UI.el;
+  var CASO = '*caso*';      // sceltaAvv quando e' selezionato "Random opponent"
   Motore.caricaCarte(window.CARTE);
   Motore.caricaKeyword(window.KEYWORD);
   var SFIDE = window.SFIDE || [];
@@ -62,13 +63,13 @@
       // tocco e l'altro (prima la lista orizzontale ripartiva sempre dall'inizio)
       var lista = s.querySelector('.avversari');
       var voci = Avversari.tutti().map(function (a) { return Object.assign({ chiusa: a.tipo !== 'base' && d.sfide.indexOf(a.nome) < 0 }, a); });
-      // un avversario a caso fra quelli sbloccati (diverso da quello scelto): lo seleziona e la lista scorre fino a lui
-      var aCaso = el('button', 'btn avv-caso', '🎲 Random opponent');
+      // Random e' una scelta come le altre (resta selezionata al ritorno): il tocco fa partire subito la partita contro un
+      // avversario sbloccato estratto al momento, e Start, con Random selezionato, ne estrae un altro
+      var aCaso = el('button', 'btn avv-caso' + (this.sceltaAvv === CASO ? ' su' : ''), '🎲 Random opponent');
       aCaso.addEventListener('click', function () {
-        var aperti = voci.filter(function (v) { return !v.chiusa && v.nome !== self.sceltaAvv; });
-        if (!aperti.length) return;
-        self.scrollAvv = 0;
-        self.preparazione(aperti[Math.floor(Math.random() * aperti.length)].nome);
+        self.sceltaAvv = CASO;
+        if (!pr.mazzoValido()) return self.preparazione();
+        self.partitaACaso();
       });
       lista.appendChild(aCaso);
       var FASCE = [['base', 'Basic'], ['rivale', 'Medium'], ['sfidante', 'Advanced']];
@@ -98,10 +99,12 @@
       if (this.scrollAvv) lista.scrollTop = this.scrollAvv;
       else setTimeout(function () { var su = lista.querySelector('.avv.su'); if (su) su.scrollIntoView({ block: 'nearest' }); }, 0);
       var o = s.querySelector('.opzioni');
-      var sf = this.sceltaAvv ? Avversari.trova(this.sceltaAvv).sfida : null;
-      var av = Avversari.trova(this.sceltaAvv);
-      o.appendChild(el('div', 'pannello scheda-avv', '<img src="' + avatar(av.nome) + '" alt=""><div><b>' + av.titolo + '</b>' +
-        '<p>' + av.descrizione + '</p>' + (sf ? '<p class="regole">Challenge: no rare cards; own castle and deck.</p>' : '') +
+      var sf = this.sceltaAvv && this.sceltaAvv !== CASO ? Avversari.trova(this.sceltaAvv).sfida : null;
+      var av = Avversari.trova(this.sceltaAvv === CASO ? null : this.sceltaAvv);
+      if (this.sceltaAvv === CASO) o.appendChild(el('div', 'pannello scheda-avv', '<span class="dado-caso">🎲</span><div><b>Random opponent</b>' +
+        '<p>Any opponent you have unlocked, drawn when the game starts. Rematch keeps the same one.</p></div>'));
+      else o.appendChild(el('div', 'pannello scheda-avv', '<img src="' + avatar(av.nome) + '" alt=""><div><b>' + av.titolo + '</b>' +
+        '<p>' + av.descrizione + '</p>' + (sf ? '<p class="regole">Challenge: own castle and deck.</p>' : '') +
         '<span class="premio">Win: ' + UI.moneta(av.premio) +
         (pr.battuto(av.nome) ? ' · beaten ' + pr.battuto(av.nome) + '× · <b class="primo">' + nomeBooster(av.nome) + ' booster at win ' + pr.prossimoBooster(av.nome) + '</b>'
           : ' · <b class="primo">first win + ' + UI.moneta(av.premio * 2) + ' & ' + nomeBooster(av.nome) + ' booster</b>') + '</span></div>'));
@@ -122,9 +125,20 @@
       var via = el('button', 'btn oro avvia' + (pr.mazzoValido() ? '' : ' spento'), 'Start');
       via.addEventListener('click', function () {
         if (!pr.mazzoValido()) { UI.avviso('Complete your deck first: 15 cards per rarity'); UI.scuoti(via); return; }
-        self.nuovaPartita({ sfida: self.sceltaAvv });
+        if (self.sceltaAvv === CASO) self.partitaACaso();
+        else self.nuovaPartita({ sfida: self.sceltaAvv });
       });
       o.appendChild(via);
+    },
+    // un avversario sbloccato a caso, diverso dall'ultimo estratto quando si puo'
+    partitaACaso: function () {
+      var pr = this.profilo, d = pr.d, ultimo = this.ultimoCaso;
+      var aperti = Avversari.tutti().filter(function (a) { return a.tipo === 'base' || d.sfide.indexOf(a.nome) >= 0; });
+      var altri = aperti.filter(function (a) { return a.nome !== ultimo; });
+      if (altri.length) aperti = altri;
+      var nome = aperti[Math.floor(Math.random() * aperti.length)].nome;
+      this.ultimoCaso = nome;
+      this.nuovaPartita({ sfida: nome });
     },
 
     // ---------------------------------------------------------------- partite

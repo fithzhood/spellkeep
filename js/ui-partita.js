@@ -259,7 +259,7 @@
     var giocabile = this.p.giocabile(1, pos);
     UI.apriLente(id, {
       risorse: { b: g.Bricks, g: g.Gems, r: g.Recruits }, partita: this.p, chi: 1,
-      nota: !giocabile ? (this.p.sfida && d.rarita === 'R' ? 'Rare cards are banned in challenges' : 'Not enough resources') : '',
+      nota: !giocabile ? 'Not enough resources' : '',
       chiusa: function () { self.sel = 0; self.modo = 0; self.aggiorna(); },
       azioni: function (lato) {
         if (d.modi > 0 && giocabile) {

@@ -582,7 +582,6 @@
     if (gioca && (io.Bricks < c.d.costo.b || io.Gems < c.d.costo.g || io.Recruits < c.d.costo.r)) return { errore: 'Insufficient resources' };
     var modi = c.d.modi || 0;
     if (gioca && (modo < 0 || modo > modi || (modo === 0 && modi > 0))) return { errore: 'Choose a mode' };
-    if (gioca && this.sfida && c.rar === 'Rare' && n === 1) return { errore: "Rare cards can't be played in a challenge" };
 
     var ultimaAzione = t.myLastAction(), ultima = t.myLastCard();
     var catena = ultima.isPlayAgainCard() && ultimaAzione === 'play';
@@ -779,7 +778,6 @@
   Partita.prototype.giocabile = function (n, pos) {
     var c = carta(this.g[n].Hand.get(pos)), p = this.g[n];
     if (p.Bricks < c.d.costo.b || p.Gems < c.d.costo.g || p.Recruits < c.d.costo.r) return false;
-    if (this.sfida && n === 1 && c.rar === 'Rare') return false;
     return true;
   };
 

@@ -23,14 +23,14 @@
   history.replaceState(null, '', location.pathname + location.search);
 })();
 </script>
-<link rel="stylesheet" href="css/arcomage.css?v=167">
+<link rel="stylesheet" href="css/arcomage.css?v=168">
 </head>
 <body>
 <div id="app"></div>
-<script src="dati/carte.js?v=167"></script>
-<script src="dati/arte.js?v=167"></script>
-<script src="dati/rivali.js?v=167"></script>
-<script src="dati/icone.js?v=167"></script>
+<script src="dati/carte.js?v=168"></script>
+<script src="dati/arte.js?v=168"></script>
+<script src="dati/rivali.js?v=168"></script>
+<script src="dati/icone.js?v=168"></script>
 <script>
 // se un file di dati non e' arrivato (pubblicazione ancora in corso su Pages), lo si richiede subito, fuori cache:
 // senza dati/rivali.js sparivano gli avversari Medium e i mazzi di partenza (5/10/2026)
@@ -38,21 +38,21 @@
   if (!window[d[0]]) document.write('<script src="dati/' + d[1] + '.js?r=' + Date.now() + '"><\/script>');
 });
 </script>
-<script src="js/php.js?v=167"></script>
-<script src="js/motore.js?v=167"></script>
-<script src="js/variabili.js?v=167"></script>
-<script src="js/cpu.js?v=167"></script>
-<script src="js/profilo.js?v=167"></script>
-<script src="js/musica.js?v=167"></script>
-<script src="js/ui-carta.js?v=167"></script>
-<script src="js/ui-segnalini.js?v=167"></script>
-<script src="js/ui-booster.js?v=167"></script>
-<script src="js/ui-partita.js?v=167"></script>
-<script src="js/tastiera.js?v=167"></script>
-<script src="js/scelta-mazzo.js?v=167"></script>
-<script src="js/ui-mazzi.js?v=167"></script>
-<script src="js/tutorial.js?v=167"></script>
-<script src="js/app.js?v=167"></script>
+<script src="js/php.js?v=168"></script>
+<script src="js/motore.js?v=168"></script>
+<script src="js/variabili.js?v=168"></script>
+<script src="js/cpu.js?v=168"></script>
+<script src="js/profilo.js?v=168"></script>
+<script src="js/musica.js?v=168"></script>
+<script src="js/ui-carta.js?v=168"></script>
+<script src="js/ui-segnalini.js?v=168"></script>
+<script src="js/ui-booster.js?v=168"></script>
+<script src="js/ui-partita.js?v=168"></script>
+<script src="js/tastiera.js?v=168"></script>
+<script src="js/scelta-mazzo.js?v=168"></script>
+<script src="js/ui-mazzi.js?v=168"></script>
+<script src="js/tutorial.js?v=168"></script>
+<script src="js/app.js?v=168"></script>
 <script>
 // gioco e figure restano in cache: si gioca anche senza rete (solo sul sito pubblicato, non al banco locale)
 if ('serviceWorker' in navigator && location.protocol === 'https:' && location.hostname !== 'localhost')
