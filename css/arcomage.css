@@ -252,6 +252,17 @@ img { -webkit-user-drag: none; }
 .finale p { font-size: .8rem; color: var(--ink2); }
 .finale .premio { font-size: 1.1rem; }
 .finale .azioni { justify-content: center; width: 100%; }
+.finale.nascosto { display: none; }
+.finale ~ .velo { z-index: 80; } .finale ~ .lente { z-index: 81; }
+.torna-esito { position: fixed; z-index: 72; left: 50%; bottom: 10px; transform: translateX(-50%); }
+.ultima-mossa { width: 100%; display: flex; flex-direction: column; gap: 3px; align-items: center; padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,.28); }
+.ultima-mossa .um-t { margin-right: 4px; font-family: var(--display); font-size: .56rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--ink2); }
+.ultima-mossa .um-testo { font-size: .74rem; line-height: 1.25; }
+.ultima-mossa .um-carta { color: var(--oro); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.ultima-mossa .um-chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.ultima-mossa .um-chip { font-size: .62rem; padding: 0 6px; border-radius: 9px; background: rgba(255,255,255,.07); white-space: nowrap; }
+.ultima-mossa .um-chip.mio.giu, .ultima-mossa .um-chip.suo.su { color: var(--giu); }
+.ultima-mossa .um-chip.mio.su, .ultima-mossa .um-chip.suo.giu { color: var(--su); }
 
 /* ------------------------------------------------------------ home */
 .home { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 18px calc(24px + var(--lato)); gap: 20px; }
@@ -1044,3 +1055,9 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .sm-barra i { display: block; height: 100%; }
 .sm-piede { display: flex; justify-content: space-between; align-items: center; }
 .sm-attivo { font-size: .54rem; font-weight: 800; color: var(--oro); text-transform: uppercase; letter-spacing: .08em; }
+/* carte possedute sul totale, nell'intestazione del negozio */
+.testa .conta-carte { padding: 6px 10px; font-size: .78rem; color: var(--ink2); white-space: nowrap; }
+.testa .conta-carte b { color: var(--ink); }
+.finale .titolo-esito { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.finale .titolo-esito .premio { line-height: 1.1; }
+.finale .riquadro:has(.ultima-mossa) { gap: 5px; }

@@ -260,6 +260,11 @@
   Profilo.prototype.azzera = function () { var n = Profilo.nuovo(); this.d = n.d; this.salva(); };
 
   Profilo.prototype.possiede = function (id) { return this.d.collezione.indexOf(id) >= 0; };
+  // carte possedute su quelle ottenibili (le Forbidden non escono mai: non contano nel totale)
+  Profilo.prototype.conteggioCarte = function () {
+    var tot = vendibili('C').length + vendibili('U').length + vendibili('R').length;
+    return { ha: this.d.collezione.length, tot: tot };
+  };
   Profilo.prototype.mazzo = function (i) { return this.d.mazzi[i === undefined ? this.d.mazzoAttivo : i]; };
   Profilo.prototype.mazzoValido = function (m) {
     m = m || this.mazzo();

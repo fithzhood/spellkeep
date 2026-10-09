@@ -27,14 +27,15 @@
       this.radice.appendChild(schermo);
       if (window.Musica && !schermo.classList.contains('gioco')) Musica.scena(schermo.classList.contains('schermo-negozio') ? 'negozio' : 'menu');
     },
+    contaCarte: function () { var c = this.profilo.conteggioCarte(); return '<div class="conta-carte pannello"><b>' + c.ha + '</b>/' + c.tot + ' cards</div>'; },
     cassa: function () { return '<div class="cassa pannello">' + UI.moneta(this.profilo.d.monete) + '</div>'; },
 
     // ---------------------------------------------------------------- home
     home: function () {
       var self = this, d = this.profilo.d, s = el('div', 'schermo home');
-      var st = d.stat;
+      var st = d.stat, cc = this.profilo.conteggioCarte();
       s.innerHTML = '<div class="marchio"><h1>SPELLKEEP</h1><p>Build your tower, break theirs. A single-player remake of MArcomage.</p>' +
-        '<div class="stat"><span><b>' + st.vinte + '</b> won</span><span><b>' + st.perse + '</b> lost</span><span><b>' + d.collezione.length + '</b> cards</span>' +
+        '<div class="stat"><span><b>' + st.vinte + '</b> won</span><span><b>' + st.perse + '</b> lost</span><span><b>' + cc.ha + '</b>/' + cc.tot + ' cards</span>' +
         '<span><b>' + d.sfide.length + '/' + Avversari.tutti().filter(function (a) { return a.tipo !== 'base'; }).length + '</b> opponents</span></div></div><nav></nav>' + this.cassa() +
         '<div class="build">build ' + BUILD + '</div>';
       var nav = s.querySelector('nav');
@@ -188,7 +189,7 @@
     negozio: function () {
       var self = this, pr = this.profilo, d = pr.d, n = d.negozio, s = el('div', 'schermo schermo-negozio');
       if (!n) { pr.rinnovaNegozio(); pr.salva(); n = d.negozio; }
-      s.innerHTML = '<div class="testa"><button class="btn indietro">Home</button><h2>Shop</h2>' + this.cassa() + '<button class="btn mazzi">Decks</button><button class="btn oro gioca">Play</button></div>' +
+      s.innerHTML = '<div class="testa"><button class="btn indietro">Home</button><h2>Shop</h2>' + this.contaCarte() + this.cassa() + '<button class="btn mazzi">Decks</button><button class="btn oro gioca">Play</button></div>' +
         '<div class="corpo"><div class="negozio"><div class="vetrina-col"><div class="vetrina"></div><div class="vetrina-booster"></div></div><div class="banco"></div></div></div>';
       this.monta(s);
       s.querySelector('.indietro').addEventListener('click', function () { self.home(); });

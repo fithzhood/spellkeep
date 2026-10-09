@@ -30,6 +30,40 @@
     if (opz.nuova && this.p.stato === 'in corso') this.presentazione(parti); else parti();
   }
 
+  // l'ultima sequenza di mosse dello stesso giocatore (piu' carte se ha rigiocato), con lo stato di prima:
+  // a fine partita si mostra cosa e' successo, altrimenti chi perde non vede perche' (il riquadro copre il campo)
+  var CAMPI = [['Tower', 'tower'], ['Wall', 'wall'], ['Quarry', 'Mine'], ['Magic', 'Altar'], ['Dungeons', 'Lair'],
+    ['Bricks', 'Bricks', 1], ['Gems', 'Gems', 1], ['Recruits', 'Recruits', 1]];
+  function fotoStato(p) {
+    var f = {};
+    [1, 2].forEach(function (n) { f[n] = {}; CAMPI.forEach(function (c) { f[n][c[0]] = PHP.num(p.g[n][c[0]]); }); });
+    return f;
+  }
+  Battaglia.prototype.registraMossa = function (chi, id, azione, prima) {
+    if (!this.giro || this.giro.chi !== chi) this.giro = { chi: chi, mosse: [], prima: prima };
+    this.giro.mosse.push({ id: id, azione: azione });
+  };
+  Battaglia.prototype.ultimaMossa = function () {
+    var g = this.giro, p = this.p;
+    if (!g || p.esito === 'Surrender') return null;
+    var chi = g.chi === 1 ? 'You' : this.av.titolo, dopo = fotoStato(p), risorse = p.esito === 'Resource';
+    var carte = g.mosse.map(function (m) {
+      return (m.azione === 'discard' ? 'discarded ' : '') + '<a class="um-carta" data-id="' + m.id + '">' + UI.dati(m.id).nome + '</a>';
+    });
+    var testo = '<b>' + chi + '</b> ' + (g.mosse[0].azione === 'discard' ? '' : 'played ') + carte.join(', then ');
+    var chip = [];
+    [1, 2].forEach(function (n) {
+      CAMPI.forEach(function (c) {
+        if (c[2] && !risorse) return;
+        var a = g.prima[n][c[0]], b = dopo[n][c[0]];
+        if (a === b) return;
+        chip.push('<span class="um-chip ' + (n === 1 ? 'mio' : 'suo') + (b < a ? ' giu' : ' su') + '">' + (n === 1 ? 'Your ' : 'Enemy ') + c[1] + ' ' + a + ' → ' + b + '</span>');
+      });
+    });
+    return '<div class="ultima-mossa"><div class="um-testo"><span class="um-t">Last move</span> ' + testo + '</div>' +
+      (chip.length ? '<div class="um-chips">' + chip.join('') + '</div>' : '') + '</div>';
+  };
+
   function tipoAvv(av) { return av.tipo === 'rivale' ? 'Medium · ' + av.tribu : av.tipo === 'sfidante' ? 'Advanced' : av.mazzoCasuale ? 'Basic · random deck' : 'Basic · starter deck'; }
   function volto(app, chi, nome, sotto, cls) {
     return '<div class="volto ' + (cls || '') + '"><img src="' + app.avatar(chi) + '" alt=""><b>' + nome + '</b>' + (sotto ? '<small>' + sotto + '</small>' : '') + '</div>';
@@ -361,8 +395,10 @@
     this.bloccato = true; this.sel = 0; this.modo = 0;
     this.q('.mano').classList.add('attesa');
     this.mostraEntrata(id, azione === 'play' ? 'You play' : 'You discard', 520, function () {
+      var prima = fotoStato(self.p);
       var r = self.p.usaCarta(1, azione, pos, modo);
       if (r.errore) { UI.avviso(r.errore); self.bloccato = false; self.aggiorna(); return; }
+      self.registraMossa(1, id, azione, prima);
       if (self.opz.tutorial) { self.bloccato = false; return self.opz.tutorial.mossa(self, r, id); }
       self.app.salvaPartita(self);
       self.aggiorna();
@@ -395,8 +431,10 @@
         : Motore.mossaCpu(self.p, 2), id = self.p.g[2].Hand.get(m.pos);
       self.mostraEntrata(id, m.azione === 'play' ? 'Opponent plays' : 'Opponent discards', m.azione === 'play' ? 1150 : 800, function () {
         if (self.chiuso) return;
+        var prima = fotoStato(self.p);
         var r = self.p.usaCarta(2, m.azione, m.pos, m.modo);
         if (r.errore) { console.error('mossa della CPU rifiutata', r.errore, m); self.p.usaCarta(2, 'discard', m.pos, 0); }
+        self.registraMossa(2, id, r.errore ? 'discard' : m.azione, prima);
         self.app.salvaPartita(self);
         self.aggiorna();
         self.scatti(r.segnalini, id, 2, function () {
@@ -442,9 +480,13 @@
     // i due ritratti: chi vince con l'anello d'oro, chi perde spento
     // (ai lati del titolo, per stare nell'altezza del telefono in orizzontale anche con i booster del premio)
     r.innerHTML = '<div class="volti">' + volto(this.app, 'giocatore', 'You', '', esito === 1 ? 'vince' : esito === 2 ? 'perde' : '') +
-      '<h2 class="' + (esito === 1 ? 'vinta' : esito === 2 ? 'persa' : '') + '">' + (esito === 1 ? 'Victory' : esito === 2 ? 'Defeat' : 'Draw') + '</h2>' +
+      '<div class="titolo-esito"><h2 class="' + (esito === 1 ? 'vinta' : esito === 2 ? 'persa' : '') + '">' + (esito === 1 ? 'Victory' : esito === 2 ? 'Defeat' : 'Draw') + '</h2>' +
+      '<div class="premio">+ ' + UI.moneta(premio) + '</div></div>' +
       volto(this.app, this.av.nome, this.av.titolo, '', esito === 2 ? 'vince' : esito === 1 ? 'perde' : '') + '</div>' +
-      '<p>' + testo + ' · ' + p.round + (p.round === 1 ? ' round' : ' rounds') + '</p><div class="premio">+ ' + UI.moneta(premio) + '</div>';
+      '<p>' + testo + ' · ' + p.round + (p.round === 1 ? ' round' : ' rounds') + '</p>' + (this.ultimaMossa() || '');
+    Array.prototype.forEach.call(r.querySelectorAll('.um-carta'), function (a) {
+      a.addEventListener('click', function () { UI.apriLente(+a.dataset.id, { nota: 'Last move', notaNeutra: true }); });
+    });
     // traguardi: prima vittoria, fascia completata, tutti battuti
     var pr = this.app.profilo, bonus = pr.ultimiBonus || [];
     // bonus e regalo a sinistra, scelta del booster a destra: in colonna non stavano nell'altezza del telefono
@@ -471,12 +513,20 @@
     if (fila.children.length) { if (fila.children.length > 1) r.classList.add('largo'); r.appendChild(fila); }
     var az = el('div', 'azioni');
     var neg = el('button', 'btn oro', 'Shop'), riv = el('button', 'btn', 'Rematch'), casa = el('button', 'btn', 'Home');
+    // il campo com'e' rimasto (le ultime carte al centro si possono aprire), poi si torna al riquadro
+    var campo = el('button', 'btn', 'Board');
+    campo.addEventListener('click', function () {
+      f.classList.add('nascosto');
+      var torna = el('button', 'btn oro torna-esito', 'Back to results');
+      torna.addEventListener('click', function () { torna.remove(); f.classList.remove('nascosto'); });
+      document.body.appendChild(torna);
+    });
     neg.addEventListener('click', function () { f.remove(); self.chiuso = true; self.app.negozio(); });
     riv.addEventListener('click', function () { f.remove(); self.chiuso = true; self.app.nuovaPartita(self.opz.rivincita); });
     casa.addEventListener('click', function () { f.remove(); self.chiuso = true; self.app.home(); });
-    az.appendChild(casa); az.appendChild(riv); az.appendChild(neg);
+    az.appendChild(casa); az.appendChild(campo); az.appendChild(riv); az.appendChild(neg);
     r.appendChild(az); f.appendChild(r);
-    setTimeout(function () { document.body.appendChild(f); }, 700);
+    setTimeout(function () { document.body.appendChild(f); }, 1200);
     this.aggiorna();
   };
 
