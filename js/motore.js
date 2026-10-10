@@ -74,6 +74,8 @@
   function impronta(t, io, lui) {
     var v = [t._next, t.prod.b, t.prod.g, t.prod.r, t.nextPlayer];
     ATTR.forEach(function (a) { v.push(io[a], lui[a]); });
+    // le sostituzioni contano a parte: Aria puo' scartare una Palisade e ripescarne un'altra, e la mano resta identica
+    v.push(io.sostituzioni || 0, lui.sostituzioni || 0);
     return JSON.stringify(v) + io.Hand.values().join(',') + '|' + lui.Hand.values().join(',');
   }
   var SEGNALINI = ['Alliance', 'Barbarian', 'Brigand', 'Beast', 'Burning', 'Holy', 'Mage', 'Soldier', 'Titan', 'Undead', 'Unliving'];
@@ -273,6 +275,7 @@
     if (!(pos >= 1 && pos <= 8 && Number.isInteger(pos))) return this;
     opz = opz || {};
     this.Hand.set(pos, id);
+    this.sostituzioni = (this.sostituzioni || 0) + 1;      // per impronta(): una carta rimpiazzata conta anche se esce uguale
     if (opz['new'] === undefined || opz['new']) { if (!this.NewCards) this.NewCards = new PArr(); this.NewCards.set(pos, 1); }
     if (opz.reveal) { if (!this.Revealed) this.Revealed = new PArr(); this.Revealed.set(pos, 1); }
     else if (this.Revealed && this.Revealed.has(pos)) this.Revealed.del(pos);
