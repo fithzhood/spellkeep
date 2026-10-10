@@ -1069,3 +1069,11 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .presenta .volto.lui.fermo img { animation: fermo-ruota .45s ease-out; }
 @keyframes fermo-ruota { 0% { transform: scale(1.18); box-shadow: 0 0 0 3px var(--oro), 0 0 28px rgba(226,179,92,.8); } 100% { transform: scale(1); } }
 .caselle-caso { margin-bottom: 4px; }
+/* carta in mano che farebbe scattare una keyword o un segnalino: pulsa appena (solo nella tua mano) */
+.mano .carta.pulsa { animation: pulsa-kw 1.8s ease-in-out infinite; }
+@keyframes pulsa-kw {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 4px 10px rgba(0,0,0,.55); }
+  50% { box-shadow: 0 0 0 1.5px rgba(255,224,138,.75), 0 0 12px 2px rgba(226,179,92,.45), 0 4px 10px rgba(0,0,0,.55); }
+}
+@media (prefers-reduced-motion: reduce) { .mano .carta.pulsa { animation: none; box-shadow: 0 0 0 1.5px rgba(255,224,138,.7), 0 4px 10px rgba(0,0,0,.55); } }
+.mano .carta.pulsa.scelta { animation: none; }

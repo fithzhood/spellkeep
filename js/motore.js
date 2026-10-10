@@ -68,6 +68,14 @@
   var KEYWORD = {};
   function caricaKeyword(lista) { KEYWORD = {}; lista.forEach(function (k) { KEYWORD[k.nome] = k; }); }
 
+  // keyword che agiscono a ogni giocata (o sono una penalita'): non fanno pulsare la carta. Charge si controlla a parte
+  var KW_SEMPRE = { Demonic: 1, Durable: 1, Quick: 1, Swift: 1, Cursed: 1, Forbidden: 1, Charge: 1 };
+  // lo stato che l'effetto di una keyword puo' cambiare (le carte rivelate no: Far sight rivela sempre)
+  function impronta(t, io, lui) {
+    var v = [t._next, t.prod.b, t.prod.g, t.prod.r, t.nextPlayer];
+    ATTR.forEach(function (a) { v.push(io[a], lui[a]); });
+    return JSON.stringify(v) + io.Hand.values().join(',') + '|' + lui.Hand.values().join(',');
+  }
   var SEGNALINI = ['Alliance', 'Barbarian', 'Brigand', 'Beast', 'Burning', 'Holy', 'Mage', 'Soldier', 'Titan', 'Undead', 'Unliving'];
   var ORDINE_KW = ['Alliance', 'Aqua', 'Barbarian', 'Beast', 'Brigand', 'Burning', 'Demonic', 'Destruction', 'Dragon', 'Holy',
     'Illusion', 'Legend', 'Mage', 'Nature', 'Restoration', 'Runic', 'Soldier', 'Titan', 'Undead', 'Unliving', 'Durable',
@@ -645,7 +653,14 @@
               ris.segnalini = (ris.segnalini || []).concat([kw]);   // per l'interfaccia: quale segnalino e' scattato
               t.executeCode(k.codice);
             }
-          } else t.executeCode(k.codice);
+          } else {
+            // keyword "attiva" = il suo effetto cambia davvero qualcosa (per far pulsare la carta in mano prima di giocarla).
+            // Quelle che agiscono sempre non contano; Charge conta solo quando colpisce la torre (muro nemico a zero)
+            var prima = KW_SEMPRE[kw] ? null : impronta(t, io, lui);
+            if (kw === 'Charge' && PHP.num(lui.Wall) <= 0) ris.kwAttive = (ris.kwAttive || []).concat([kw]);
+            t.executeCode(k.codice);
+            if (prima !== null && impronta(t, io, lui) !== prima) ris.kwAttive = (ris.kwAttive || []).concat([kw]);
+          }
         });
       }
       io.applyGameLimits(this.cfg); lui.applyGameLimits(this.cfg);
@@ -677,7 +692,7 @@
       ris.anteprima = {
         io: { attr: attr(io), cambi: camb(manoIo, io.Hand), variazioni: Object.assign({}, io.Changes), segnalini: io.TokenValues.values() },
         lui: { attr: attr(lui), cambi: camb(manoLui, lui.Hand), variazioni: Object.assign({}, lui.Changes), segnalini: lui.TokenValues.values() },
-        scatta: ris.segnalini || [], turnoExtra: t.nextPlayer === n
+        scatta: ris.segnalini || [], attive: ris.kwAttive || [], turnoExtra: t.nextPlayer === n
       };
       return ris;
     }

@@ -276,8 +276,10 @@
       var id = PHP.num(g.Hand.get(i)); ora.push(id);
       // nuova = pescata dopo la tua ultima mossa (NewCards, come l'originale) o spostata da un rimescolamento/scambio (Moved)
       var nuova = !!(g.NewCards && g.NewCards.has(i)) || !!(g.Moved && g.Moved.has(i));
-      var c = UI.carta(id, { risorse: ris, spenta: !this.p.giocabile(1, i), nuova: nuova, partita: this.p, chi: 1 });
+      var giocabile = this.p.giocabile(1, i);
+      var c = UI.carta(id, { risorse: ris, spenta: !giocabile, nuova: nuova, partita: this.p, chi: 1 });
       c.dataset.pos = i;
+      if (giocabile && this.scatterebbe(i, id)) c.classList.add('pulsa');
       if (i === this.sel) c.classList.add('scelta');
       mano.appendChild(c);
     }
@@ -287,6 +289,31 @@
     mano.classList.toggle('testuale', testo);
     this.q('.btn-vista').innerHTML = testo ? 'Art' : 'Text';
     if (testo) this.righeVisibili();
+  };
+
+  // la carta in posizione pos, giocata adesso, farebbe scattare una keyword (Aria nel round giusto, una combo, un
+  // segnalino che arriva a 100...)? Si gioca per finta sul motore; il risultato si tiene finche' lo stato non cambia
+  var GUARDANO_LUI = { Banish: 1, Skirmisher: 1, Horde: 1 };
+  Battaglia.prototype.scatterebbe = function (pos, id) {
+    var p = this.p;
+    if (this.opz.tutorial || p.stato !== 'in corso' || p.corrente !== 1) return false;
+    var d = UI.dati(id);
+    if (!d.keyword.length) return false;
+    var g1 = p.g[1], g2 = p.g[2];
+    var chiave = [p.round, pos, id, g1.Hand.values(), g2.Hand.values(), g1.TokenValues && g1.TokenValues.values(), (g1.LastCard ? g1.LastCard.values() : []), (g1.LastAction ? g1.LastAction.values() : []), JSON.stringify(g1.Changes), JSON.stringify(g2.Changes),
+      g1.Tower, g1.Wall, g2.Tower, g2.Wall, g1.Quarry, g1.Magic, g1.Dungeons, g2.Quarry, g2.Magic, g2.Dungeons,
+      g1.Bricks, g1.Gems, g1.Recruits, g2.Bricks, g2.Gems, g2.Recruits, g2.Revealed ? g2.Revealed.keys() : []].join(';');
+    this.cachePulsa = this.cachePulsa || {};
+    if (chiave in this.cachePulsa) return this.cachePulsa[chiave];
+    var r = false;
+    try {
+      var pv = p.anteprima(1, pos, d.modi > 0 ? 1 : 0);
+      // a carte nascoste le keyword che guardano la mano nemica non pulsano: direbbero cosa c'e' in mano a lui
+      var attive = pv && pv.anteprima ? pv.anteprima.attive.filter(function (k) { return !(p.nascoste && GUARDANO_LUI[k]); }) : [];
+      r = !!(pv && pv.anteprima && (pv.anteprima.scatta.length || attive.length));
+    } catch (e) { r = false; }
+    if (Object.keys(this.cachePulsa).length > 200) this.cachePulsa = {};
+    return (this.cachePulsa[chiave] = r);
   };
 
   // quante righe intere di testo stanno nella parte visibile della carta: si misura, perche' la scala
