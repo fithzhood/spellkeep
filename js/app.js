@@ -13,7 +13,12 @@
   function sfida(nome) { return SFIDE.find(function (s) { return s.nome === nome; }); }
   // i ritratti (arte/avatar/prompt.json, fatti con Gemini): avversari img/avatar/<nome>.jpg e il giocatore giocatore.jpg
   function nomeBooster(nome) { var t = Booster.preferito(nome); return t ? Booster.tipo(t).nome : 'random'; }
-  function avatar(nome) { return 'img/avatar/' + (nome === 'giocatore' ? 'giocatore' : Avversari.trova(nome).avatar) + '.jpg'; }
+  function avatar(nome) { return 'img/avatar/' + (nome === 'giocatore' ? 'giocatore' : nome === CASO ? 'caso' : Avversari.trova(nome).avatar) + '.jpg'; }
+  // ritratti caricati in anticipo: la ruota di Random all'inizio della partita non deve mostrare caselle vuote
+  var precaricati = {};
+  function precarica(lista) {
+    lista.forEach(function (v) { var u = avatar(v.nome); if (!precaricati[u]) { precaricati[u] = new Image(); precaricati[u].src = u; } });
+  }
 
   var App = {
     profilo: Profilo.carica(),
@@ -55,7 +60,9 @@
     preparazione: function (scelta) {
       var self = this, pr = this.profilo, d = pr.d, s = el('div', 'schermo');
       if (d.partita) { UI.avviso('Finish or surrender the current game first'); return this.riprendi(); }
-      this.sceltaAvv = scelta !== undefined ? scelta : (this.sceltaAvv || null);
+      // all'avvio dell'app si riparte dall'ultimo avversario affrontato (Random compreso), salvato nel profilo
+      if (scelta !== undefined) this.sceltaAvv = scelta;
+      else if (this.sceltaAvv === undefined) this.sceltaAvv = this.ultimoValido();
       s.innerHTML = '<div class="testa"><button class="btn indietro">Back</button><h2>Choose your opponent</h2>' + this.cassa() + '</div>' +
         '<div class="corpo"><div class="preparazione"><div class="avversari"></div><div class="opzioni"></div></div></div>';
       this.monta(s);
@@ -64,15 +71,15 @@
       // tocco e l'altro (prima la lista orizzontale ripartiva sempre dall'inizio)
       var lista = s.querySelector('.avversari');
       var voci = Avversari.tutti().map(function (a) { return Object.assign({ chiusa: a.tipo !== 'base' && d.sfide.indexOf(a.nome) < 0 }, a); });
-      // Random e' una scelta come le altre (resta selezionata al ritorno): il tocco fa partire subito la partita contro un
-      // avversario sbloccato estratto al momento, e Start, con Random selezionato, ne estrae un altro
-      var aCaso = el('button', 'btn avv-caso' + (this.sceltaAvv === CASO ? ' su' : ''), '🎲 Random opponent');
-      aCaso.addEventListener('click', function () {
-        self.sceltaAvv = CASO;
-        if (!pr.mazzoValido()) return self.preparazione();
-        self.partitaACaso();
-      });
-      lista.appendChild(aCaso);
+      // Random e' una casella come le altre: si seleziona, e Start estrae un avversario sbloccato
+      var gc = el('div', 'caselle caselle-caso');
+      var aCaso = el('button', 'avv pannello avv-caso' + (this.sceltaAvv === CASO ? ' su' : ''),
+        '<img src="' + avatar(CASO) + '" alt=""><span class="t"><span class="nome">Random opponent</span>' +
+        '<span class="tipo">Any unlocked</span><span class="premio">' + UI.moneta('?') + '</span></span>');
+      aCaso.addEventListener('click', function () { self.preparazione(CASO); });
+      gc.appendChild(aCaso);
+      lista.appendChild(gc);
+      if (this.sceltaAvv === CASO) precarica(voci.filter(function (v) { return !v.chiusa; }));
       var FASCE = [['base', 'Basic'], ['rivale', 'Medium'], ['sfidante', 'Advanced']];
       FASCE.forEach(function (f) {
         var qui = voci.filter(function (v) { return v.tipo === f[0]; });
@@ -102,7 +109,7 @@
       var o = s.querySelector('.opzioni');
       var sf = this.sceltaAvv && this.sceltaAvv !== CASO ? Avversari.trova(this.sceltaAvv).sfida : null;
       var av = Avversari.trova(this.sceltaAvv === CASO ? null : this.sceltaAvv);
-      if (this.sceltaAvv === CASO) o.appendChild(el('div', 'pannello scheda-avv', '<span class="dado-caso">🎲</span><div><b>Random opponent</b>' +
+      if (this.sceltaAvv === CASO) o.appendChild(el('div', 'pannello scheda-avv', '<img src="' + avatar(CASO) + '" alt=""><div><b>Random opponent</b>' +
         '<p>Any opponent you have unlocked, drawn when the game starts. Rematch keeps the same one.</p></div>'));
       else o.appendChild(el('div', 'pannello scheda-avv', '<img src="' + avatar(av.nome) + '" alt=""><div><b>' + av.titolo + '</b>' +
         '<p>' + av.descrizione + '</p>' + (sf ? '<p class="regole">Challenge: own castle and deck.</p>' : '') +
@@ -126,6 +133,7 @@
       var via = el('button', 'btn oro avvia' + (pr.mazzoValido() ? '' : ' spento'), 'Start');
       via.addEventListener('click', function () {
         if (!pr.mazzoValido()) { UI.avviso('Complete your deck first: 15 cards per rarity'); UI.scuoti(via); return; }
+        d.ultimoAvv = self.sceltaAvv; pr.salva();
         if (self.sceltaAvv === CASO) self.partitaACaso();
         else self.nuovaPartita({ sfida: self.sceltaAvv });
       });
@@ -139,7 +147,15 @@
       if (altri.length) aperti = altri;
       var nome = aperti[Math.floor(Math.random() * aperti.length)].nome;
       this.ultimoCaso = nome;
-      this.nuovaPartita({ sfida: nome });
+      this.nuovaPartita({ sfida: nome, caso: true });
+    },
+    // l'ultimo avversario scelto con Start, se e' ancora selezionabile; altrimenti il giullare
+    ultimoValido: function () {
+      var d = this.profilo.d, u = d.ultimoAvv;
+      if (u === CASO) return CASO;
+      if (!u) return null;
+      var a = Avversari.tutti().filter(function (x) { return x.nome === u; })[0];
+      return a && (a.tipo === 'base' || d.sfide.indexOf(a.nome) >= 0) ? u : null;
     },
 
     // ---------------------------------------------------------------- partite
@@ -157,7 +173,8 @@
         mazzi: [{ C: mio.C, U: mio.U, R: mio.R, segnalini: mio.segnalini }, suo],
         nascoste: d.imp.nascoste, lunga: d.imp.lunga, sfida: sf, seme: caso.intero(1, 2147483646)
       });
-      this.avvia({ partita: p, sfida: conf.sfida, titolo: av.titolo, rivincita: conf, nuova: true });
+      // la rivincita e' contro lo stesso avversario, senza ruota
+      this.avvia({ partita: p, sfida: conf.sfida, titolo: av.titolo, rivincita: { sfida: conf.sfida }, nuova: true, caso: !!conf.caso });
     },
     avvia: function (opz) {
       this.battaglia = null;

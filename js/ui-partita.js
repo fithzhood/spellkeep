@@ -81,8 +81,33 @@
       if (chiusa) return; chiusa = true;
       f.classList.add('via'); setTimeout(function () { f.remove(); if (!self.chiuso) poi(); }, 280);
     };
-    f.addEventListener('click', chiudi);
-    setTimeout(chiudi, 2600);
+    var pronti = function () { f.addEventListener('click', chiudi); setTimeout(chiudi, 2600); };
+    if (this.opz.caso) this.ruota(f, pronti); else pronti();
+  };
+
+  // Random: i ritratti degli avversari sbloccati girano veloci e rallentano fino a fermarsi su quello estratto
+  Battaglia.prototype.ruota = function (f, poi) {
+    var self = this, app = this.app, d = app.profilo.d;
+    var rosa = Avversari.tutti().filter(function (a) { return a.tipo === 'base' || d.sfide.indexOf(a.nome) >= 0; });
+    var v = f.querySelector('.volto.lui'), img = v.querySelector('img'), nome = v.querySelector('b'), sotto = v.querySelector('small');
+    var riga = f.querySelector('.pr-sotto'), finale = riga.innerHTML;
+    riga.textContent = 'Drawing your opponent…';
+    v.classList.add('gira');
+    var passi = rosa.length > 1 ? 18 : 0, ultimo = null, i = 0;
+    function mostra(a) { img.src = app.avatar(a.nome); nome.textContent = a.titolo; if (sotto) sotto.textContent = tipoAvv(a); }
+    (function passo() {
+      if (self.chiuso) return;
+      if (i >= passi) {
+        mostra(self.av);
+        v.classList.remove('gira'); v.classList.add('fermo');
+        riga.innerHTML = finale;
+        return poi();
+      }
+      var altri = rosa.filter(function (a) { return a.nome !== ultimo; }), a = altri[Math.floor(Math.random() * altri.length)];
+      ultimo = a.nome; mostra(a);
+      i++;
+      setTimeout(passo, 55 + Math.pow(i / passi, 2.4) * 320);     // da ~55 ms a ~375 ms fra un ritratto e l'altro
+    })();
   };
 
   Battaglia.prototype.costruisci = function () {
