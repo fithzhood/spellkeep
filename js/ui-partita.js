@@ -228,7 +228,7 @@
       var visibile = !this.p.nascoste || (g.Revealed && g.Revealed.has(i));
       if (visibile) {
         // come nella tua mano: New sulle carte pescate dopo la sua ultima mossa, tratteggio su quelle che non puo' pagare
-        var c = UI.carta(id, { mini: true, risorse: ris, spenta: !this.p.giocabile(2, i), nuova: !!(g.NewCards && g.NewCards.has(i)) });
+        var c = UI.carta(id, { mini: true, risorse: ris, spenta: !this.p.giocabile(2, i), nuova: !!(g.NewCards && g.NewCards.has(i)) || !!(g.Moved && g.Moved.has(i)) });
         if (i === this.selLui) c.classList.add('scelta');
         (function (pos, cid) {
           c.addEventListener('click', function () {
@@ -274,8 +274,8 @@
     var ora = [];
     for (var i = 1; i <= 8; i++) {
       var id = PHP.num(g.Hand.get(i)); ora.push(id);
-      // nuova = pescata dopo la tua ultima mossa (il motore lo tiene in NewCards, come l'originale): resta segnata per tutto il turno
-      var nuova = !!(g.NewCards && g.NewCards.has(i));
+      // nuova = pescata dopo la tua ultima mossa (NewCards, come l'originale) o spostata da un rimescolamento/scambio (Moved)
+      var nuova = !!(g.NewCards && g.NewCards.has(i)) || !!(g.Moved && g.Moved.has(i));
       var c = UI.carta(id, { risorse: ris, spenta: !this.p.giocabile(1, i), nuova: nuova, partita: this.p, chi: 1 });
       c.dataset.pos = i;
       if (i === this.sel) c.classList.add('scelta');

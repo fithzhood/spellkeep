@@ -175,13 +175,16 @@
     this.Deck = null; this.Hand = null;
     this.LastCard = null; this.LastMode = null; this.LastAction = null;
     this.NewCards = null; this.Revealed = null; this.Changes = zeri();
+    // carte spostate da un rimescolamento o uno scambio (Whirlwind, Magic portal...): solo per l'etichetta New
+    // dell'interfaccia. NewCards resta quello dell'originale, perche' alcune carte lo leggono ("If New")
+    this.Moved = null;
     this.DisCards = PArr.lista([null, null], 0);
     this.TokenNames = null; this.TokenValues = null; this.TokenChanges = null;
     this.Tower = 0; this.Wall = 0; this.Quarry = 0; this.Magic = 0; this.Dungeons = 0; this.Bricks = 0; this.Gems = 0; this.Recruits = 0;
   }
   Giocatore.prototype.clone = function (caso) {
     var g = new Giocatore(caso), self = this;
-    ['LastCard', 'LastMode', 'LastAction', 'NewCards', 'Revealed', 'TokenNames', 'TokenValues', 'TokenChanges', 'Hand', 'DisCards']
+    ['LastCard', 'LastMode', 'LastAction', 'NewCards', 'Moved', 'Revealed', 'TokenNames', 'TokenValues', 'TokenChanges', 'Hand', 'DisCards']
       .forEach(function (k) { g[k] = self[k] instanceof PArr ? self[k].clone() : self[k]; });
     g.Deck = this.Deck.clone(caso);
     g.Changes = Object.assign({}, this.Changes);
@@ -277,16 +280,19 @@
       if (this.NewCards && this.NewCards.has(da)) flag.set(p, 1);
       if (this.Revealed && this.Revealed.has(p)) this.Revealed.del(p);
     }
+    for (p = 1; p <= 8; p++) if (PHP.num(mano.get(p)) !== PHP.num(this.Hand.get(p))) this.segnaSpostata(p);
     this.Hand = mano;
     if (flag.size()) this.NewCards = flag;
     return this;
   };
+  Giocatore.prototype.segnaSpostata = function (pos) { if (!this.Moved) this.Moved = new PArr(); this.Moved.set(pos, 1); };
   Giocatore.prototype.switchCards = function (a, b) {
     a = PHP.num(a); b = PHP.num(b);
     if (a < 1 || a > 8 || b < 1 || b > 8 || a === b) return this;
     var c1 = this.Hand.get(a), c2 = this.Hand.get(b);
     var n1 = !!(this.NewCards && this.NewCards.has(a)), n2 = !!(this.NewCards && this.NewCards.has(b));
     this.Hand.set(a, c2); this.Hand.set(b, c1);
+    if (PHP.num(c1) !== PHP.num(c2)) { this.segnaSpostata(a); this.segnaSpostata(b); }
     if (!this.NewCards) this.NewCards = new PArr();
     if (n1) this.NewCards.set(b, 1); else this.NewCards.del(b);
     if (n2) this.NewCards.set(a, 1); else this.NewCards.del(a);
@@ -599,7 +605,7 @@
     else { t.myChanges = Object.assign({}, io.Changes); t.hisChanges = Object.assign({}, lui.Changes); }
     if (!catena) {
       this.istantanea = { my: Object.assign({}, io.Changes), his: Object.assign({}, lui.Changes) };
-      io.NewCards = null;
+      io.NewCards = null; io.Moved = null;
       io.Changes = zeri(); lui.Changes = zeri();
       io.DisCards = PArr.lista([null, null], 0);
       io.TokenChanges = PArr.lista([0, 0, 0], 1); lui.TokenChanges = PArr.lista([0, 0, 0], 1);
@@ -738,7 +744,7 @@
     }
     return v;
   }
-  var CAMPI_G = ['Hand', 'LastCard', 'LastMode', 'LastAction', 'NewCards', 'Revealed', 'DisCards', 'TokenNames', 'TokenValues', 'TokenChanges'];
+  var CAMPI_G = ['Hand', 'LastCard', 'LastMode', 'LastAction', 'NewCards', 'Moved', 'Revealed', 'DisCards', 'TokenNames', 'TokenValues', 'TokenChanges'];
   Partita.prototype.esporta = function () {
     var self = this, o = {};
     ['nascoste', 'lunga', 'sfida', 'stato', 'vincitore', 'esito', 'round', 'corrente', 'istantanea', 'registro', 'extra'].forEach(function (k) { o[k] = self[k]; });
