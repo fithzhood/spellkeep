@@ -196,12 +196,14 @@
 
   Battaglia.prototype.disegnaAlto = function () {
     var alto = this.q('.alto'), g = this.p.g[2], self = this;
+    var ris = { b: g.Bricks, g: g.Gems, r: g.Recruits };
     alto.innerHTML = '';
     for (var i = 1; i <= 8; i++) {
       var id = g.Hand.get(i);
       var visibile = !this.p.nascoste || (g.Revealed && g.Revealed.has(i));
       if (visibile) {
-        var c = UI.carta(id, { mini: true });
+        // come nella tua mano: New sulle carte pescate dopo la sua ultima mossa, tratteggio su quelle che non puo' pagare
+        var c = UI.carta(id, { mini: true, risorse: ris, spenta: !this.p.giocabile(2, i), nuova: !!(g.NewCards && g.NewCards.has(i)) });
         if (i === this.selLui) c.classList.add('scelta');
         (function (pos, cid) {
           c.addEventListener('click', function () {

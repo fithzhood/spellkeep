@@ -1061,3 +1061,9 @@ body:has(.tut-faro) .velo-seg { place-items: center end; padding-right: calc(16p
 .finale .titolo-esito { display: flex; flex-direction: column; align-items: center; gap: 0; }
 .finale .titolo-esito .premio { line-height: 1.1; }
 .finale .riquadro:has(.ultima-mossa) { gap: 5px; }
+/* mano nemica: carte che non puo' pagare spente e tratteggiate come nella tua mano (in piccolo) */
+.alto .carta.mini.spenta { filter: brightness(.88); border: 1.5px dashed rgba(236,232,224,.85); }
+.alto .carta.mini.spenta > :not(.testa-c):not(.etichetta-nuova), .alto .carta.mini.spenta .nome-t { filter: saturate(.3) brightness(.62); }
+.alto .carta.mini.spenta .costo:not(.manca) { filter: saturate(.5) brightness(.8); }
+/* negozio: la spunta verde sulle bustine gia' completate, come nei premi */
+.offerta-booster .booster .b-conta.completo { display: block; }
